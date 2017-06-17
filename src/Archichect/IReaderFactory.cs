@@ -1,0 +1,18 @@
+using System.Collections.Generic;
+using JetBrains.Annotations;
+
+namespace Archichect {
+    public interface IReaderFactory : IPlugin {
+        [NotNull, ItemNotNull]
+        IEnumerable<string> SupportedFileExtensions { get; }
+        [NotNull]
+        IDependencyReader CreateReader([NotNull] string fileName, bool needsOnlyItemTails);
+    }
+
+    public interface IDependencyReader {
+        string FullFileName { get; }
+
+        void SetReadersInSameReadFilesBeforeReadDependencies(IDependencyReader[] readerGang);
+        IEnumerable<Dependency> ReadDependencies(WorkingGraph readingGraph, int depth, bool ignoreCase);
+    }
+}

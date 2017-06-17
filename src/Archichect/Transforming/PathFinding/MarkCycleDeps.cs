@@ -1,0 +1,263 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using JetBrains.Annotations;
+using Archichect.Matching;
+
+namespace Archichect.Transforming.PathFinding {
+    public class MarkCycleDeps : TransformerWithOptions<Ignore, MarkCycleDeps.TransformOptions> {
+        public class TransformOptions {
+            public bool IgnoreSelfCycles = true;
+            public bool KeepOnlyCycleDependencies;
+            public int MaxCycleLength = int.MaxValue;
+            public ItemMatch CycleAnchorsMatch;
+            public string IndexedMarkerPrefix;
+            [NotNull, ItemNotNull]
+            public IEnumerable<Action<Dependency>> Effects = new Action<Dependency>[] { d => d.MarkAsBad(typeof(MarkCycleDeps).Name) };
+        }
+
+        private class FindCycleDepsPathFinder<TDependency, TItem>
+            : AbstractDepthFirstPathTraverser<TDependency, TItem, Ignore, Ignore, Ignore>
+                where TDependency : AbstractDependency<TItem>
+                where TItem : AbstractItem<TItem> {
+            private readonly HashSet<int> _foundCycleHashs = new HashSet<int>();
+            private readonly Dictionary<TItem, int> _visited2RestLength;
+            private readonly int _maxCycleLength;
+            private readonly TItem _root;
+            private readonly bool _ignoreSelfCycles;
+            [NotNull]
+            private readonly Action<int, Stack<TDependency>, string> _recordNewCycleToRoot;
+
+            private readonly string _addIndexToMarkerFormat;
+
+            public int FoundCycleCount => _foundCycleHashs.Count;
+
+            public FindCycleDepsPathFinder([NotNull, ItemNotNull] IEnumerable<TDependency> dependencies,
+                    [CanBeNull] ItemMatch cycleAnchorsMatch, bool ignoreSelfCycles, int maxCycleLength,
+                    [NotNull] Action<int, Stack<TDependency>, string> recordNewCycleToRoot,
+                    [NotNull, ItemCanBeNull] AbstractPathMatch<TDependency, TItem>[] expectedPathMatches, Action checkAbort) : base(checkAbort) {
+                Dictionary<TItem, TDependency[]> outgoing = AbstractItem<TItem>.CollectOutgoingDependenciesMap(dependencies);
+                _maxCycleLength = maxCycleLength;
+                _ignoreSelfCycles = ignoreSelfCycles;
+                _recordNewCycleToRoot = recordNewCycleToRoot;
+
+                IEnumerable<TItem> roots = outgoing.Keys.Where(i => ItemMatch.IsMatch(cycleAnchorsMatch, i));
+                _addIndexToMarkerFormat = "D" + ("" + roots.Count() / 2).Length;
+
+                foreach (var root in roots.OrderBy(i => i.Name)) {
+                    _root = root;
+                    _visited2RestLength = new Dictionary<TItem, int>();
+                    Traverse(root, outgoing, expectedPathMatches, endMatch: null, down: Ignore.Om);
+                }
+            }
+
+            protected override bool ShouldVisitSuccessors(TItem tail, Stack<TDependency> currentPath, int expectedPathMatchIndex,
+                    out Ignore initUpSum) {
+                initUpSum = Ignore.Om;
+                if (currentPath.Count == 0) {
+                    // We are at root ... nothing to do, and of course we visit all successors
+                    return true;
+                } else if (currentPath.Count > _maxCycleLength) {
+                    // We have reached the checking limit - no further graph traversal
+                    return false;
+                } else if (Equals(tail, _root)) {
+                    // We found a cycle to the root
+                    if (currentPath.Count == 1 && _ignoreSelfCycles) {
+                        // Self cycles is ignored
+                    } else {
+                        RecordCycleToRoot(currentPath);
+                    }
+                    // No need to drill deeper after the cycle is found
+                    return false;
+                } else {
+                    int lengthToBeChecked = _maxCycleLength - currentPath.Count;
+                    int restLengthCheckedSoFar;
+                    if (!_visited2RestLength.TryGetValue(tail, out restLengthCheckedSoFar)) {
+                        // We never visited tail up to now
+                        _visited2RestLength.Add(tail, _maxCycleLength - currentPath.Count);
+                        return true;
+                    } else {
+                        // We did visit tail before ...
+                        if (lengthToBeChecked > restLengthCheckedSoFar) {
+                            // ... but last time the rest length was smaller than now, so we must retraverse it
+                            _visited2RestLength[tail] = lengthToBeChecked;
+                            return true;
+                        } else {
+                            // ... and we don't have to drill deeper.
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            protected override DownAndHere AfterPushDependency(Stack<TDependency> currentPath, int expectedPathMatchIndex,
+                    AbstractPathMatch<TDependency, TItem> pathMatchOrNull,
+                    bool isEnd, Ignore down) {
+                return new DownAndHere();
+            }
+
+            private void RecordCycleToRoot(Stack<TDependency> currentPath) {
+                int[] nodeHashes = currentPath.Select(d => d.UsingItem.GetHashCode()).ToArray();
+                int minHashCode = nodeHashes[0];
+                int minPos = 0;
+                for (int i = 1; i < currentPath.Count; i++) {
+                    if (nodeHashes[i] < minHashCode) {
+                        minPos = i;
+                        minHashCode = nodeHashes[i];
+                    }
+                }
+
+                int cycleHash = 0;
+                for (int i = minPos; i < nodeHashes.Length; i++) {
+                    cycleHash = unchecked(cycleHash * 17 + nodeHashes[i]);
+                }
+                for (int i = 0; i < minPos; i++) {
+                    cycleHash = unchecked(cycleHash * 17 + nodeHashes[i]);
+                }
+                if (_foundCycleHashs.Add(cycleHash)) {
+                    _recordNewCycleToRoot(_foundCycleHashs.Count - 1, currentPath, _addIndexToMarkerFormat);
+                }
+            }
+
+            protected override Ignore BeforePopDependency(Stack<TDependency> currentPath, int expectedPathMatchIndex,
+                    AbstractPathMatch<TDependency, TItem> pathMatchOrNull,
+                    bool isEnd, Ignore here, Ignore upSum, Ignore childUp) {
+                return childUp;
+            }
+
+            protected override Ignore AfterVisitingSuccessors(bool visitSuccessors, TItem tail,
+                    Stack<TDependency> currentPath, int expectedPathMatchIndex, Ignore upSum) {
+                return upSum;
+            }
+        }
+
+        public static readonly Option ConsiderSelfCyclesOption = new Option("cl", "consider-loops", "",
+            "Also consider cycles of length 1, i.e. looping from an item to itself", @default: false);
+
+        public static readonly Option KeepOnlyCyclesOption = new Option("kc", "keep-only-cycles", "",
+            "Remove all non-cycle dependencies", @default: false);
+
+        public static readonly Option CycleAnchorsOption = new Option("ca", "cycle-anchors", "itempattern", "Items checked for cycles through them", @default: "all items are checked");
+        public static readonly Option MaxCycleLengthOption = new Option("ml", "max-length", "#", "Maximum length of cycles found", @default: "arbitrary length");
+        public static readonly Option AddIndexedMarkerOption = new Option("im", "indexed-marker", "&", "Add separate cycle markers starting with &", @default: "");
+        public static readonly DependencyEffectOptions EffectOptions = new DependencyEffectOptions();
+
+        private static readonly IEnumerable<Option> _transformOptions =
+            EffectOptions.AllOptions.Concat(new[]
+                { ConsiderSelfCyclesOption, KeepOnlyCyclesOption, CycleAnchorsOption, MaxCycleLengthOption });
+
+        public override string GetHelp(bool detailedHelp, string filter) {
+            return $@"Find cycles in dependency graph.
+
+Configuration options: None
+
+Transformer options: {Option.CreateHelp(_transformOptions, detailedHelp, filter)}";
+        }
+
+        protected override Ignore CreateConfigureOptions([NotNull] GlobalContext globalContext,
+            [CanBeNull] string configureOptionsString, bool forceReload) {
+            return Ignore.Om;
+        }
+
+        protected override TransformOptions CreateTransformOptions([NotNull] GlobalContext globalContext,
+            [CanBeNull] string transformOptionsString, Func<string, IEnumerable<Dependency>> findOtherWorkingGraph) {
+            var transformOptions = new TransformOptions();
+
+            transformOptions.Effects = EffectOptions.Parse(globalContext: globalContext,
+                argsAsString: transformOptionsString, defaultReasonForSetBad: typeof(MarkCycleDeps).Name,
+                    ignoreCase: globalContext.IgnoreCase, moreOptionActions: new[] {
+                    ConsiderSelfCyclesOption.Action((args, j) => {
+                        transformOptions.IgnoreSelfCycles = false;
+                        return j;
+                    }),
+                    KeepOnlyCyclesOption.Action((args, j) => {
+                        transformOptions.KeepOnlyCycleDependencies = true;
+                        return j;
+                    }),
+                    CycleAnchorsOption.Action((args, j) => {
+                        transformOptions.CycleAnchorsMatch = new ItemMatch(Option.ExtractRequiredOptionValue(args, ref j, "missing anchor name"), globalContext.IgnoreCase, anyWhereMatcherOk: true);
+                        return j;
+                    }),
+                    MaxCycleLengthOption.Action((args, j) => {
+                        transformOptions.MaxCycleLength = Option.ExtractIntOptionValue(args, ref j, "Invalid maximum cycle length");
+                        return j;
+                    }),
+                    AddIndexedMarkerOption.Action((args, j) => {
+                        transformOptions.IndexedMarkerPrefix = Option.ExtractRequiredOptionValue(args, ref j, "missing marker name");
+                        return j;
+                    }),
+                });
+
+            return transformOptions;
+        }
+
+        public override int Transform([NotNull] GlobalContext globalContext, Ignore Ignore,
+            [NotNull] TransformOptions transformOptions, [NotNull] [ItemNotNull] IEnumerable<Dependency> dependencies,
+            [NotNull] List<Dependency> transformedDependencies) {
+            var dependenciesOnCycles = new HashSet<Dependency>();
+            Action<int, Stack<Dependency>, string> recordNewCycleToRoot = (cycleIndex, cycle, addIndexToMarkerFormat) => dependenciesOnCycles.UnionWith(cycle);
+
+            if (transformOptions.IndexedMarkerPrefix != null) {
+                recordNewCycleToRoot += (cycleIndex, cycle, addIndexToMarkerFormat) => {
+                    string indexedMarker = transformOptions.IndexedMarkerPrefix + cycleIndex.ToString(addIndexToMarkerFormat);
+                    Dependency[] cycleDependencies = cycle.Reverse().ToArray();
+                    cycleDependencies[0].UsingItem.MarkPathElement(indexedMarker, 0, isStart: true, isEnd: false, isMatchedByCountSymbol: false, isLoopBack: false);
+                    for (var i = 0; i < cycleDependencies.Length; i++) {
+                        Dependency d = cycleDependencies[i];
+                        bool isEnd = i == cycleDependencies.Length - 1;
+                        d.MarkPathElement(indexedMarker, i, isStart: i == 0, isEnd: isEnd, isMatchedByCountSymbol: false, isLoopBack: isEnd);
+                        // Currently no reachability counts, as no path match options are implemented
+                    }
+                };
+            }
+
+            var cycleFinder = new FindCycleDepsPathFinder<Dependency, Item>(dependencies, transformOptions.CycleAnchorsMatch, transformOptions.IgnoreSelfCycles,
+                                    transformOptions.MaxCycleLength, recordNewCycleToRoot, new AbstractPathMatch<Dependency, Item>[0], // TODO: Cycles via path matches would also be a nice feature ...
+                                    globalContext.CheckAbort);
+
+            Log.WriteInfo($"... found {cycleFinder.FoundCycleCount} cycles");
+
+            if (transformOptions.Effects.Contains(DependencyEffectOptions.DELETE_ACTION_MARKER)) {
+                var deps = new HashSet<Dependency>(dependencies);
+                deps.ExceptWith(dependenciesOnCycles);
+                transformedDependencies.AddRange(deps);
+            } else {
+                DependencyEffectOptions.Execute(transformOptions.Effects, dependenciesOnCycles);
+                transformedDependencies.AddRange(transformOptions.KeepOnlyCycleDependencies ? dependenciesOnCycles : dependencies);
+            }
+            return Program.OK_RESULT;
+        }
+
+        public override IEnumerable<Dependency> CreateSomeTestDependencies(WorkingGraph transformingGraph) {
+            Item a = transformingGraph.CreateItem(ItemType.SIMPLE, "A");
+            Item b = transformingGraph.CreateItem(ItemType.SIMPLE, "B");
+            Item c = transformingGraph.CreateItem(ItemType.SIMPLE, "C");
+            Item d = transformingGraph.CreateItem(ItemType.SIMPLE, "D");
+            Item e = transformingGraph.CreateItem(ItemType.SIMPLE, "E");
+            Item f = transformingGraph.CreateItem(ItemType.SIMPLE, "F");
+            Item g = transformingGraph.CreateItem(ItemType.SIMPLE, "G");
+            Item h = transformingGraph.CreateItem(ItemType.SIMPLE, "H");
+            Item i = transformingGraph.CreateItem(ItemType.SIMPLE, "I");
+            Item j = transformingGraph.CreateItem(ItemType.SIMPLE, "J");
+
+            //   a<=>b->c->d->e<=>f->g
+            //          ^  ^         |
+            // h<=>i->j-+  +---------+
+            return new[] {
+                transformingGraph.CreateDependency(a,b,source: null, markers: "", ct:1), // on cycle
+                transformingGraph.CreateDependency(b,a,source: null, markers: "", ct:1), // on cycle
+                transformingGraph.CreateDependency(b,c,source: null, markers: "", ct:1),
+                transformingGraph.CreateDependency(c,d,source: null, markers: "", ct:1),
+                transformingGraph.CreateDependency(d,e,source: null, markers: "", ct:1), // on cycle
+                transformingGraph.CreateDependency(e,f,source: null, markers: "", ct:1), // on cycle
+                transformingGraph.CreateDependency(f,e,source: null, markers: "", ct:1), // on cycle
+                transformingGraph.CreateDependency(f,g,source: null, markers: "", ct:1), // on cycle
+                transformingGraph.CreateDependency(g,d,source: null, markers: "", ct:1), // on cycle
+                transformingGraph.CreateDependency(h,i,source: null, markers: "", ct:1), // on cycle
+                transformingGraph.CreateDependency(i,h,source: null, markers: "", ct:1), // on cycle
+                transformingGraph.CreateDependency(i,j,source: null, markers: "", ct:1),
+                transformingGraph.CreateDependency(j,c,source: null, markers: "", ct:1),
+            };
+        }
+    }
+}

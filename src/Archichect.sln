@@ -1,0 +1,77 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 12.0.31101.0
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Archichect", "Archichect\Archichect.csproj", "{FF14C674-9AC8-4658-8A89-C2EEAC3453F3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Archichect.Tests", "Archichect.Tests\Archichect.Tests.csproj", "{88671B88-A572-458E-8A13-FDDB79A1C902}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Archichect.TestAssembly", "Archichect.TestAssembly\Archichect.TestAssembly.csproj", "{12182557-4A79-4950-BEC5-735AA73FC3FF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Archichect.TestAssemblyÄÖÜß", "Archichect.TestAssemblyÄÖÜß\Archichect.TestAssemblyÄÖÜß.csproj", "{724AFB8E-E89C-4864-B9E1-274D177524FA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Archichect.MSBuild", "Archichect.MSBuild\Archichect.MSBuild.csproj", "{A327E6E5-768A-4C1D-9C3C-F04345A6CF57}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{5EC85268-7900-4B42-8083-76A5DD210940}"
+	ProjectSection(SolutionItems) = preProject
+		.nuget\NuGet.Config = .nuget\NuGet.Config
+		.nuget\NuGet.exe = .nuget\NuGet.exe
+		.nuget\NuGet.targets = .nuget\NuGet.targets
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Archichect.TestAssemblyForAttributes", "Archichect.TestAssemblyForAttributes\Archichect.TestAssemblyForAttributes.csproj", "{0AA9E414-B449-4582-ADEA-332D18C2BE23}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Archichect.TestRenderer", "Archichect.TestRenderer\Archichect.TestRenderer.csproj", "{72A2F47A-4902-47E2-A1AB-3715F3139B53}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Archichect.VerySmallExplorativeTestAssembly", "Archichect.VerySmallExplorativeTestAssembly\Archichect.VerySmallExplorativeTestAssembly.csproj", "{EEFEDA5F-37A0-4B95-B290-F68229E5AE43}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Archichect.TestPlugin", "Archichect.TestPlugIn\Archichect.TestPlugin.csproj", "{A6A2B8D7-D953-4586-9C8A-F7C8CC5AFC11}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FF14C674-9AC8-4658-8A89-C2EEAC3453F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF14C674-9AC8-4658-8A89-C2EEAC3453F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF14C674-9AC8-4658-8A89-C2EEAC3453F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF14C674-9AC8-4658-8A89-C2EEAC3453F3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88671B88-A572-458E-8A13-FDDB79A1C902}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88671B88-A572-458E-8A13-FDDB79A1C902}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88671B88-A572-458E-8A13-FDDB79A1C902}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88671B88-A572-458E-8A13-FDDB79A1C902}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12182557-4A79-4950-BEC5-735AA73FC3FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12182557-4A79-4950-BEC5-735AA73FC3FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12182557-4A79-4950-BEC5-735AA73FC3FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12182557-4A79-4950-BEC5-735AA73FC3FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{724AFB8E-E89C-4864-B9E1-274D177524FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{724AFB8E-E89C-4864-B9E1-274D177524FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{724AFB8E-E89C-4864-B9E1-274D177524FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{724AFB8E-E89C-4864-B9E1-274D177524FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A327E6E5-768A-4C1D-9C3C-F04345A6CF57}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A327E6E5-768A-4C1D-9C3C-F04345A6CF57}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A327E6E5-768A-4C1D-9C3C-F04345A6CF57}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A327E6E5-768A-4C1D-9C3C-F04345A6CF57}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0AA9E414-B449-4582-ADEA-332D18C2BE23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0AA9E414-B449-4582-ADEA-332D18C2BE23}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0AA9E414-B449-4582-ADEA-332D18C2BE23}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0AA9E414-B449-4582-ADEA-332D18C2BE23}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72A2F47A-4902-47E2-A1AB-3715F3139B53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72A2F47A-4902-47E2-A1AB-3715F3139B53}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72A2F47A-4902-47E2-A1AB-3715F3139B53}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72A2F47A-4902-47E2-A1AB-3715F3139B53}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EEFEDA5F-37A0-4B95-B290-F68229E5AE43}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EEFEDA5F-37A0-4B95-B290-F68229E5AE43}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EEFEDA5F-37A0-4B95-B290-F68229E5AE43}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EEFEDA5F-37A0-4B95-B290-F68229E5AE43}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A6A2B8D7-D953-4586-9C8A-F7C8CC5AFC11}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A6A2B8D7-D953-4586-9C8A-F7C8CC5AFC11}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A6A2B8D7-D953-4586-9C8A-F7C8CC5AFC11}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A6A2B8D7-D953-4586-9C8A-F7C8CC5AFC11}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
