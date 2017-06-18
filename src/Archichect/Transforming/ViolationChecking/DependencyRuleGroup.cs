@@ -28,10 +28,11 @@ namespace Archichect.Transforming.ViolationChecking {
         [CanBeNull]
         private readonly DependencyMatch _groupMatchOrNullForMainGroup;
 
-        private DependencyRuleGroup([CanBeNull] string defaultName, string groupPattern, DependencyMatch groupMatchOrNullForMainGroup,
-        [NotNull] IEnumerable<DependencyRule> allowed, [NotNull] IEnumerable<DependencyRule> questionable,
+        private DependencyRuleGroup([CanBeNull] string defaultName, [NotNull] string groupPattern, 
+                [CanBeNull] DependencyMatch groupMatchOrNullForMainGroup,
+                [NotNull] IEnumerable<DependencyRule> allowed, [NotNull] IEnumerable<DependencyRule> questionable,
                 [NotNull] IEnumerable<DependencyRule> forbidden) {
-            _groupPattern = string.IsNullOrWhiteSpace(groupPattern) ? "global rule group" : "rule group '" + groupPattern.Trim() + "'";
+            _groupPattern = groupPattern.Trim();
             _groupMatchOrNullForMainGroup = groupMatchOrNullForMainGroup;
             _groupMarker = groupMatchOrNullForMainGroup == null
                 ? null
@@ -44,7 +45,9 @@ namespace Archichect.Transforming.ViolationChecking {
         }
 
         public DependencyRuleGroup([NotNull] string groupPattern, bool ignoreCase, ItemType usingTypeHint, ItemType usedTypeHint, string defaultName)
-            : this(defaultName, groupPattern, groupPattern == "" ? null : DependencyMatch.Create(groupPattern, ignoreCase, usingTypeHint: usingTypeHint, usedTypeHint: usedTypeHint),
+            : this(defaultName, 
+                groupPattern == "" ? "global rule group" : groupPattern,
+                groupPattern == "" ? null : DependencyMatch.Create(groupPattern, ignoreCase, usingTypeHint: usingTypeHint, usedTypeHint: usedTypeHint),
                 Enumerable.Empty<DependencyRule>(),
                 Enumerable.Empty<DependencyRule>(),
                 Enumerable.Empty<DependencyRule>()) {
@@ -170,7 +173,9 @@ namespace Archichect.Transforming.ViolationChecking {
 
         [NotNull]
         public DependencyRuleGroup Combine([NotNull] DependencyRuleGroup other, bool ignoreCase) {
-            return new DependencyRuleGroup(_groupMarker, _groupPattern + "+" + other._groupPattern, _groupMatchOrNullForMainGroup,
+            return new DependencyRuleGroup(_groupMarker, 
+                _groupPattern != other._groupPattern ? _groupPattern + "+" + other._groupPattern : _groupPattern,
+                _groupMatchOrNullForMainGroup,
                 _allowed.Union(other._allowed),
                 _questionable.Union(other._questionable),
                 _forbidden.Union(other._forbidden));

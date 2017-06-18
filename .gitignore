@@ -30,3 +30,6 @@
 /src/ArchichectViolations.txt
 /src/Archichect.sln.DotSettings.user
 /src/CreateZip.bat
+/src/Archichect/ArchichectRules1.bat
+*.bak
+*.log

@@ -1,8 +1,8 @@
-// Generated: 17.06.2017 16:35:29 (UTC)
+// Generated: 17.06.2017 19:22:51 (UTC)
 // Warning: This is generated code! Don't touch as it will be overridden by the build process.
 
 using System.Reflection;
 
-[assembly: AssemblyVersion("0.0.0.2")]
-[assembly: AssemblyFileVersion("0.0.0.2")]
-[assembly: AssemblyInformationalVersion("0.0.0-beta0002")]
+[assembly: AssemblyVersion("0.0.0.5")]
+[assembly: AssemblyFileVersion("0.0.0.5")]
+[assembly: AssemblyInformationalVersion("0.0.0-beta0005")]

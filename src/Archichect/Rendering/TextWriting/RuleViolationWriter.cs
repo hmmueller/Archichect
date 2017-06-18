@@ -29,8 +29,18 @@ namespace Archichect.Rendering.TextWriting {
             [NotNull, ItemNotNull] IEnumerable<Dependency> dependencies, Options options,
             [NotNull] WriteTarget target, bool ignoreCase) {
 
-            int violationsCount = dependencies.Count(d => d.NotOkCt > 0);
-
+            string message;
+            {
+                int badCount = dependencies.Count(d => d.BadCt > 0);
+                int questionableCount = dependencies.Count(d => d.QuestionableCt > 0);
+                string badMessage = badCount > 0 ? $"{badCount} violations" : "";
+                string questionableMessage = questionableCount > 0
+                    ? $"{questionableCount} questionable dependencies"
+                    : "";
+                message = badMessage != "" 
+                    ? questionableMessage != "" ? badMessage + " and " + questionableMessage : badMessage
+                    : questionableMessage != "" ? questionableMessage : "no violations";
+            }
             if (target.IsConsoleOut) {
                 var consoleLogger = new ConsoleLogger();
                 foreach (var d in dependencies.Where(d => d.QuestionableCt > 0 && d.BadCt == 0)) {
@@ -55,13 +65,13 @@ namespace Archichect.Rendering.TextWriting {
                     );
                 var settings = new XmlWriterSettings { Encoding = Encoding.UTF8, Indent = true };
                 WriteTarget writeTarget = GetXmlFile(target);
-                Log.WriteInfo($"Writing {violationsCount} violations to {writeTarget}");
+                Log.WriteInfo($"Writing {message} to {writeTarget}");
                 using (var xmlWriter = XmlWriter.Create(writeTarget.FullFileName, settings)) {
                     document.Save(xmlWriter);
                 }
             } else {
                 WriteTarget writeTarget = GetTextFile(target);
-                Log.WriteInfo($"Writing {violationsCount} violations to {writeTarget }");
+                Log.WriteInfo($"Writing {message} to {writeTarget }");
                 using (var sw = writeTarget.CreateWriter()) {
                     RenderToTextWriter(dependencies, sw, options.SimpleRuleOutput, options.NewLine);
                 }
