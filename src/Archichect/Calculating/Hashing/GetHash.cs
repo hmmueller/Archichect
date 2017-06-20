@@ -1,4 +1,4 @@
-﻿namespace Archichect.Calculating {
+﻿namespace Archichect.Calculating.Hashing {
     public class GetHash : ICalculator {
         public string GetHelp(bool detailedHelp, string filter) {
             return @"Compute hash of all input values.";
