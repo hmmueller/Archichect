@@ -817,8 +817,10 @@ namespace Archichect {
             string s = ExtractOptionValue(globalContext, args, ref i, allowOptionWithLeadingMinus: true);
             string pattern = ExtractNextValue(globalContext, args, ref i, allowOptionWithLeadingMinus: true);
             if (pattern == null) {
-                maxCount = 10;
-                pattern = s;
+                if (!int.TryParse(s, out maxCount) || maxCount <= 0) {
+                    pattern = s;
+                    maxCount = 10;
+                } 
             } else {
                 if (!int.TryParse(s, out maxCount) || maxCount <= 0) {
                     throw new ArgumentException($"'{s}' is not a valid count");

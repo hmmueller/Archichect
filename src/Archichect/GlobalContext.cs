@@ -461,7 +461,7 @@ namespace Archichect {
         public void LogAboutNDependencies(int maxCount, [CanBeNull] string pattern, [NotNull] WriteTarget target) {
             IEnumerable<Dependency> matchingDependencies = LogOnlyDependencyCount(pattern);
             int n = target.IsConsoleOut ? maxCount : int.MaxValue / 2;
-            using (var tw = target.CreateWriter()) {
+            using (var tw = CreateFullFileName(target, ".txt").CreateWriter()) {
                 foreach (var d in matchingDependencies.Take(n)) {
                     tw.WriteLine(d.AsLimitableStringWithTypes(false, threeLines: true));
                 }
@@ -477,7 +477,7 @@ namespace Archichect {
             int n = target.IsConsoleOut ? maxCount : int.MaxValue / 2;
             matchingItems.Sort((i1, i2) => string.Compare(i1.Name, i2.Name,
                         IgnoreCase ? StringComparison.InvariantCultureIgnoreCase : StringComparison.InvariantCulture));
-            using (var tw = target.CreateWriter()) {
+            using (var tw = CreateFullFileName(target, ".txt").CreateWriter()) {
                 foreach (var i in matchingItems.Take(n)) {
                     tw.WriteLine(i.AsFullString());
                 }

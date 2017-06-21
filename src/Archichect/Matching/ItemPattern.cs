@@ -127,8 +127,10 @@ namespace Archichect.Matching {
                     matchers[i] = CreateMatcher(nameAndPattern[1].Trim(), 0, ignoreCase);
                 }
                 _matchers = new MatcherVector(matchers);
-            } else if (anyWhereMatcherOk &&  parts.Count() == 1 && !parts.Any(p => Regex.IsMatch(p, @"[;(\\*^$]"))) {
-                // If there is only a single pattern without any special chars in it
+            } else if (anyWhereMatcherOk 
+                &&  parts.Count() == 1 
+                && !Regex.IsMatch(parts.First().Trim('*'), @"[;(\\*^$]")) {
+                // If there is only a single pattern without any special chars in it - except leading or trailing *
                 _matchers = new AnyWhereMatcher(CreateMatcher(parts.First(), 0, ignoreCase));
             } else {
                 int j = 0;

@@ -321,7 +321,7 @@ namespace Archichect.Tests {
 
         [TestMethod]
         public void TestProblemWithTests() {
-            ItemType testType = ItemType.New("A", new[] { "Assembly", }, new[] { "Name" }, ignoreCase: false);
+            ItemType testType = ItemType.New("A", new[] { "Assembly", }, new[] { ".Name" }, ignoreCase: false);
             ItemType simpleType = ItemType.New("N", new[] { "Name", }, new[] { "" }, ignoreCase: false);
             var g1 = new Projection(testType, simpleType, "**Tests**", null, IGNORECASE, true, true);
             var g2 = new Projection(testType, simpleType, "**Tests**()", null, IGNORECASE, true, true);

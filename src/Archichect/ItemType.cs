@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 
 namespace Archichect {
@@ -63,7 +64,10 @@ namespace Archichect {
             if (keys.Length != subKeys.Length) {
                 throw new ArgumentException($"Item type {name} is defined with a different number of keys and subkeys, namely {keys.Length} vs. {subKeys.Length}; this is not supported. Please correct type definition.", nameof(subKeys));
             }
-            if (subKeys.Any(subkey => !string.IsNullOrWhiteSpace(subkey) && subkey.Length < 2 && subkey[0] != '.' && subkey.Substring(1).Contains("."))) {
+            if (keys.Any(k => !Regex.IsMatch(k, @"^\w+$"))) {
+                throw new ArgumentException($"Keys of item type {name} must only consist of letters, digits and underscores; there are unsupported keys: " + string.Join(" ", keys), nameof(keys));
+            }
+            if (subKeys.Any(k => !string.IsNullOrWhiteSpace(k) && !Regex.IsMatch(k, @"^[.]\w+$"))) {
                 throw new ArgumentException($"Subkeys of item type {name} must either be empty or .name; there are unsupported subkeys: " + string.Join(" ", subKeys), nameof(subKeys));
             }
 
