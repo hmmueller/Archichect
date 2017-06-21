@@ -244,6 +244,10 @@ namespace Archichect {
                 CurrentGraph.AddDependencies(readSet);
             }
 
+            LogDependencyCount();
+        }
+
+        private void LogDependencyCount() {
             Log.WriteInfo($"... now {CurrentGraph.DependencyCount} dependencies");
         }
 
@@ -464,6 +468,7 @@ namespace Archichect {
             using (var tw = CreateFullFileName(target, ".txt").CreateWriter()) {
                 foreach (var d in matchingDependencies.Take(n)) {
                     tw.WriteLine(d.AsLimitableStringWithTypes(false, threeLines: true));
+                    tw.WriteLine();
                 }
                 if (matchingDependencies.Skip(n).Any()) {
                     tw.WriteLine("...");
@@ -480,6 +485,7 @@ namespace Archichect {
             using (var tw = CreateFullFileName(target, ".txt").CreateWriter()) {
                 foreach (var i in matchingItems.Take(n)) {
                     tw.WriteLine(i.AsFullString());
+                    tw.WriteLine();
                 }
                 if (matchingItems.Skip(n).Any()) {
                     tw.WriteLine("...");
@@ -618,6 +624,7 @@ namespace Archichect {
             } else {
                 CreateWorkingGraph(CurrentGraph.StickyId + "->", GraphCreationType.Manual, Clone(CurrentGraph.VisibleDependencies));
             }
+            LogDependencyCount();
         }
 
         [CanBeNull, ItemNotNull]
@@ -636,6 +643,7 @@ namespace Archichect {
 
         public void PushNewGraph(string newName) {
             CreateWorkingGraph(newName, GraphCreationType.Manual, new Dependency[0]);
+            LogDependencyCount();
         }
 
         public void DeleteGraphs([NotNull, ItemNotNull] IEnumerable<string> namesToBeDeleted) {
@@ -652,6 +660,7 @@ namespace Archichect {
             if (!_workingGraphs.Any()) {
                 _workingGraphs.Add(CreateDefaultGraph(_itemAndDependencyFactories));
             }
+            LogDependencyCount();
         }
 
         public void IncludeGraphs([NotNull, ItemNotNull] IEnumerable<string> namesToBeIncluded, bool removeIncluded) {
@@ -666,6 +675,7 @@ namespace Archichect {
                         _workingGraphs.Remove(g);
                     }
                 }
+                LogDependencyCount();
             }
         }
 
@@ -676,6 +686,7 @@ namespace Archichect {
             } else {
                 _workingGraphs.Remove(g);
                 _workingGraphs.Add(g);
+                LogDependencyCount();
             }
         }
 

@@ -29,7 +29,7 @@ namespace Archichect.Matching {
             string dep = pattern.Substring(ldep, rdep - ldep).Trim();
             if (Pattern.IsPrefixAndSuffixAsterisksPattern(dep)) {
                 var usingPattern = new SingleDependencyMatch(usingTypeHint, dep, "", usedTypeHint, "", ignoreCase);
-                var usedPattern = new SingleDependencyMatch(usingTypeHint, dep, "", usedTypeHint, "", ignoreCase);
+                var usedPattern = new SingleDependencyMatch(usingTypeHint, "", "", usedTypeHint, dep, ignoreCase);
                 return new DependencyMatchDisjunction(pattern, new[] { usingPattern, usedPattern });
             } else {
                 return new SingleDependencyMatch(usingTypeHint, left, dep, usedTypeHint, right, ignoreCase);
