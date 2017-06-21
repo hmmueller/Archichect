@@ -351,6 +351,9 @@ namespace Archichect.PathMatching {
         private const string NAME_REGEX = "{[^}]*}|[a-zA-Z0-9]";
         private const string SYMBOL_REGEX = @"\G[\s_]*([*+?()|.:\[\]^#]|" + NAME_REGEX + ")";
 
+        // ReSharper disable once StaticMemberInGenericType
+        private static readonly Regex _symbols = new Regex(SYMBOL_REGEX);
+
         private readonly Dictionary<string, TItemMatch> _definedItemMatches;
         private readonly Dictionary<string, TDependencyMatch> _definedDependencyMatches;
         private readonly bool _ignoreCase;
@@ -382,7 +385,6 @@ namespace Archichect.PathMatching {
         }
 
         public string RawPeekSymbol(int pos) {
-            Regex _symbols = new Regex(SYMBOL_REGEX);
             if (pos >= _definition.Length) {
                 return "";
             } else {

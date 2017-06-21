@@ -99,7 +99,7 @@ namespace Archichect.Matching {
         public bool IgnoreCase { get; }
 
         protected static StringComparison GetComparisonType(bool ignoreCase) {
-            return ignoreCase ? StringComparison.InvariantCulture : StringComparison.InvariantCultureIgnoreCase;
+            return ignoreCase ? StringComparison.InvariantCultureIgnoreCase : StringComparison.InvariantCulture;
         }
 
         protected AbstractRememberingDelegateMatcher(int resultGroupCt, string segment, Func<string, string, bool> isMatch, bool ignoreCase, int maxSize)

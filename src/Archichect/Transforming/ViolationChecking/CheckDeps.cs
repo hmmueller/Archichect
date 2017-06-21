@@ -109,7 +109,7 @@ Transformer options: {Option.CreateHelp(_transformOptions, detailedHelp, filter)
                 onIncludedConfiguration: (e, n) => children.Add(e),
                 onLineWithLineNo: (line, lineNo) => {
                     if (line.StartsWith("$")) {
-                        if (currentGroup != null && currentGroup.GroupMarker != "") {
+                        if (currentGroup != null && !currentGroup.IsGlobalGroup) {
                             return "$ inside '{{ ... }}' not allowed";
                         } else {
                             string typeLine = line.Substring(1).Trim();
@@ -125,7 +125,7 @@ Transformer options: {Option.CreateHelp(_transformOptions, detailedHelp, filter)
                     } else if (line.EndsWith("{")) {
                         if (currentGroup == null || usingItemType == null) {
                             return $"Itemtypes not defined - $ line is missing in {ruleSourceName}, dependency rules are ignored";
-                        } else if (currentGroup.GroupMarker != "") {
+                        } else if (!currentGroup.IsGlobalGroup) {
                             return "Nested '{{ ... {{' not possible";
                         } else {
                             string groupPattern = line.TrimEnd('{').Trim();
@@ -134,7 +134,7 @@ Transformer options: {Option.CreateHelp(_transformOptions, detailedHelp, filter)
                             return null;
                         }
                     } else if (line == "}") {
-                        if (currentGroup != null && currentGroup.GroupMarker != "") {
+                        if (currentGroup != null && !currentGroup.IsGlobalGroup) {
                             currentGroup = mainRuleGroup;
                             return null;
                         } else {
@@ -277,10 +277,10 @@ Transformer options: {Option.CreateHelp(_transformOptions, detailedHelp, filter)
                 foreach (var group in checkedGroups) {
                     int matchCount = group.Check(dependencies, transformOptions.AddMarker, ref badCount, ref questionableCount);
 
-                    if (!_matchesByGroup.ContainsKey(group.GroupPattern)) {
-                        _matchesByGroup[group.GroupPattern] = matchCount;
+                    if (!_matchesByGroup.ContainsKey(group.GroupName)) {
+                        _matchesByGroup[group.GroupName] = matchCount;
                     } else {
-                        _matchesByGroup[group.GroupPattern] += matchCount;
+                        _matchesByGroup[group.GroupName] += matchCount;
                     }
                 }
                 _allCheckedGroups.UnionWith(checkedGroups);

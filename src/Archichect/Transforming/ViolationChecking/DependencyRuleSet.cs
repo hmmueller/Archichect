@@ -28,10 +28,10 @@ namespace Archichect.Transforming.ViolationChecking {
             }
             visited.Add(this);
             foreach (var g in _ruleGroups) {
-                if (result.ContainsKey(g.GroupPattern)) {
-                    result[g.GroupPattern] = result[g.GroupPattern].Combine(g, ignoreCase);
+                if (result.ContainsKey(g.GroupName)) {
+                    result[g.GroupName] = result[g.GroupName].Combine(g, ignoreCase);
                 } else {
-                    result[g.GroupPattern] = g;
+                    result[g.GroupName] = g;
                 }
             }
             foreach (var includedRuleSet in _includedRuleSets) {

@@ -94,7 +94,7 @@ namespace Archichect.Matching {
             }
         }
 
-        private static bool IsPrefixAndSuffixAsterisksPattern([NotNull] string segment) {
+        public static bool IsPrefixAndSuffixAsterisksPattern([NotNull] string segment) {
             return segment.StartsWith("**") && segment.EndsWith("**") && HasNoRegexCharsExceptPeriod(segment.Trim('*'));
         }
 

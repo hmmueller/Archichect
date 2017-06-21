@@ -20,8 +20,9 @@ namespace Archichect.Transforming.ViolationChecking {
         [NotNull]
         private readonly List<DependencyRule> _forbidden;
 
-        [CanBeNull]
-        private readonly string _groupMarker;
+        //[CanBeNull]
+        //private readonly string _groupMarker;
+
         [NotNull]
         private readonly string _groupPattern;
 
@@ -34,11 +35,11 @@ namespace Archichect.Transforming.ViolationChecking {
                 [NotNull] IEnumerable<DependencyRule> forbidden) {
             _groupPattern = groupPattern.Trim();
             _groupMatchOrNullForMainGroup = groupMatchOrNullForMainGroup;
-            _groupMarker = groupMatchOrNullForMainGroup == null
-                ? null
-                : AbstractMarkerSet.CreateReadableDefaultMarker(
-                        new[] { groupMatchOrNullForMainGroup.UsingMatch },
-                        new[] { groupMatchOrNullForMainGroup.UsedMatch }, defaultName);
+            //_groupMarker = groupMatchOrNullForMainGroup == null
+            //    ? null
+            //    : AbstractMarkerSet.CreateReadableDefaultMarker(
+            //            new[] { groupMatchOrNullForMainGroup.UsingMatch },
+            //            new[] { groupMatchOrNullForMainGroup.UsedMatch }, defaultName);
             _allowed = allowed.ToList();
             _questionable = questionable.ToList();
             _forbidden = forbidden.ToList();
@@ -46,19 +47,21 @@ namespace Archichect.Transforming.ViolationChecking {
 
         public DependencyRuleGroup([NotNull] string groupPattern, bool ignoreCase, ItemType usingTypeHint, ItemType usedTypeHint, string defaultName)
             : this(defaultName, 
-                groupPattern == "" ? "global rule group" : groupPattern,
-                groupPattern == "" ? null : DependencyMatch.Create(groupPattern, ignoreCase, usingTypeHint: usingTypeHint, usedTypeHint: usedTypeHint),
-                Enumerable.Empty<DependencyRule>(),
-                Enumerable.Empty<DependencyRule>(),
-                Enumerable.Empty<DependencyRule>()) {
+                groupPattern: groupPattern,
+                groupMatchOrNullForMainGroup: groupPattern == "" ? null : DependencyMatch.Create(groupPattern, ignoreCase, usingTypeHint: usingTypeHint, usedTypeHint: usedTypeHint),
+                allowed: Enumerable.Empty<DependencyRule>(),
+                questionable: Enumerable.Empty<DependencyRule>(),
+                forbidden: Enumerable.Empty<DependencyRule>()) {
             // empty
         }
 
-        [NotNull]
-        public string GroupMarker => _groupMarker ?? "";
+        //[NotNull]
+        //public string GroupMarker => _groupMarker ?? "";
 
         [NotNull]
-        public string GroupPattern => _groupPattern;
+        public string GroupName => IsGlobalGroup ? "global rule group" : _groupPattern;
+
+        public bool IsGlobalGroup => _groupPattern == "";
 
         [ExcludeFromCodeCoverage]
         public override string ToString() {
@@ -116,15 +119,15 @@ namespace Archichect.Transforming.ViolationChecking {
             }
         }
 
-        private static void CopyRulesWithNewUsing([NotNull] string trimmedUsingPattern, [NotNull] string rawTrimmedUsedPattern, 
-                                                  List<DependencyRule> rules, ItemMatch @using,
-                                                  [NotNull] string ruleSourceName, int lineNo, [NotNull] string line) {
+        private static void CopyRulesWithNewUsing([NotNull] string trimmedUsingPattern,
+            [NotNull] string rawTrimmedUsedPattern,  List<DependencyRule> rules, ItemMatch @using,
+            [NotNull] string ruleSourceName, int lineNo, [NotNull] string line) {
             IEnumerable<DependencyRule> indirectRulesWithMatchingUsingPattern =
                 rules.Where(r => r.MatchesUsingPattern(rawTrimmedUsedPattern)).ToArray(); // make a copy!
 
             rules.AddRange(indirectRulesWithMatchingUsingPattern.Select(
                     tail => new DependencyRule(
-                                new DependencyMatch(@using, tail.DependencyPattern, tail.Used,
+                                new SingleDependencyMatch(@using, tail.DependencyPattern, tail.Used,
                                 representation: @using.Representation + "--" + tail.DependencyPattern + "->" + tail.Used),                     
                                 new DependencyRuleSource(ruleSourceName, lineNo, line + "|" + tail.Source.ToString(), 
                                                          tail.Source.IsQuestionableRule, trimmedUsingPattern))
@@ -147,7 +150,7 @@ namespace Archichect.Transforming.ViolationChecking {
             string repString = trimmedUsingPattern + " " + leftRepresentationPart + trimmedDependencyPattern + rightRepresentationPart + trimmedUsedPattern;
             DependencyRuleSource rep = new DependencyRuleSource(ruleSourceName, lineNo, repString, questionableRule, trimmedUsingPattern);
 
-            var match = new DependencyMatch(usingItemTypeHint, trimmedUsingPattern, trimmedDependencyPattern, usedItemTypeHint, trimmedUsedPattern, ignoreCase);
+            var match = new SingleDependencyMatch(usingItemTypeHint, trimmedUsingPattern, trimmedDependencyPattern, usedItemTypeHint, trimmedUsedPattern, ignoreCase);
             var head = new DependencyRule(match, rep);
 
             var result = new List<DependencyRule> { head };
@@ -173,7 +176,7 @@ namespace Archichect.Transforming.ViolationChecking {
 
         [NotNull]
         public DependencyRuleGroup Combine([NotNull] DependencyRuleGroup other, bool ignoreCase) {
-            return new DependencyRuleGroup(_groupMarker, 
+            return new DependencyRuleGroup("????????????",//_groupMarker, 
                 _groupPattern != other._groupPattern ? _groupPattern + "+" + other._groupPattern : _groupPattern,
                 _groupMatchOrNullForMainGroup,
                 _allowed.Union(other._allowed),
@@ -202,7 +205,7 @@ namespace Archichect.Transforming.ViolationChecking {
                     if (d.BadCt > 0) {
                         badCt++;
                         if (addMarker) {
-                            d.IncrementMarker(_groupMarker ?? "global");
+                            d.IncrementMarker(_groupPattern /*??????_groupMarker*/ ?? "global");
                         }
                     } else if (d.QuestionableCt > 0) {
                         questionableCt++;
@@ -222,22 +225,22 @@ namespace Archichect.Transforming.ViolationChecking {
         private void Check([NotNull] Dependency d) {
             if (_forbidden.Any(r => r.IsMatch(d))) {
                 // First, we check for forbidden rules - "if it is forbidden, it is definitely forbidden"
-                d.MarkAsBad(_groupPattern);
+                d.MarkAsBad(GroupName);
             } else if (_allowed.Any(r => r.IsMatch(d))) {
                 // Then we check for allowed - "if it is not forbidden, and it is allowed, then it is definitely allowed"
             } else if (_questionable.Any(r => r.IsMatch(d))) {
                 // Last, we check for questionable - "if it is neither allowed nor forbidden, but questionably allowed, well, so be it"
-                d.MarkAsQuestionable(_groupPattern);
+                d.MarkAsQuestionable(GroupName);
             } else {
                 // If no rule matches, it is bad!
-                d.MarkAsBad(_groupPattern);
+                d.MarkAsBad(GroupName);
             }
         }
 
         private void CheckBadOnly([NotNull] Dependency d) {
             if (_forbidden.Any(r => r.IsMatch(d))) {
                 // First, we check for forbidden rules - "if it is forbidden, it is definitely forbidden"
-                d.MarkAsBad(_groupPattern);
+                d.MarkAsBad(GroupName);
             }   
             // If there is no allowed or questionable rule, then there is an implicit ** ---> ** rule.
         }

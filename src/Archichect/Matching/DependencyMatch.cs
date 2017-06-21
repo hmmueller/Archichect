@@ -1,64 +1,43 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 
 namespace Archichect.Matching {
-    public class DependencyMatch {
+    public abstract class DependencyMatch {
         public string Representation { get; }
 
-        [CanBeNull]
-        public ItemMatch UsingMatch {
-            get;
-        }
-        [CanBeNull]
-        public DependencyPattern DependencyPattern {
-            get;
-        }
-        [CanBeNull]
-        public ItemMatch UsedMatch {
-            get;
-        }
-
-        private static readonly string[] NO_STRINGS = new string[0];
-
-        public DependencyMatch([CanBeNull] ItemMatch usingMatch,
-            [CanBeNull] DependencyPattern dependencyPattern, [CanBeNull] ItemMatch usedMatch, string representation) {
-            UsingMatch = usingMatch;
-            DependencyPattern = dependencyPattern;
-            UsedMatch = usedMatch;
+        protected DependencyMatch(string representation) {
             Representation = representation;
         }
 
-        public DependencyMatch(ItemType usingTypeHint, string usingPattern, string dependencyPattern, ItemType usedTypeHint, string usedPattern, bool ignoreCase) : this(
-            usingPattern != "" ? new ItemMatch(usingTypeHint, usingPattern, 0, ignoreCase, anyWhereMatcherOk: false) : null,
-            dependencyPattern != "" ? new DependencyPattern(dependencyPattern, ignoreCase) : null,
-            usedPattern != "" ? new ItemMatch(usedTypeHint, usedPattern, usingPattern.Count(c => c == '('), ignoreCase, anyWhereMatcherOk: false) : null,
-            usingPattern + "--" + dependencyPattern + "->" + usedPattern) {
-        }
+        public static DependencyMatch Create(string pattern, bool ignoreCase, string arrowTail = "->",
+            ItemType usingTypeHint = null, ItemType usedTypeHint = null) {
+            int leftEnd = pattern.IndexOf("--", StringComparison.InvariantCulture);
+            string left = leftEnd < 0 ? "" : pattern.Substring(0, leftEnd).Trim();
+            int rightStart = pattern.LastIndexOf(arrowTail, StringComparison.InvariantCulture);
+            string right = rightStart < 0 || rightStart < leftEnd ? "" : pattern.Substring(rightStart + 2).Trim();
 
-        public static DependencyMatch Create(string pattern, bool ignoreCase, string arrowTail = "->", ItemType usingTypeHint = null, ItemType usedTypeHint = null) {
-            int l = pattern.IndexOf("--", StringComparison.InvariantCulture);
-            string left = l < 0 ? "" : pattern.Substring(0, l);
-            int r = pattern.LastIndexOf(arrowTail, StringComparison.InvariantCulture);
-            string right = r < 0 || r < l ? "" : pattern.Substring(r + 2);
-
-            int ldep = l < 0 ? 0 : l + 2;
-            int rdep = r < 0 || r < l ? pattern.Length : r;
+            int ldep = leftEnd < 0 ? 0 : leftEnd + 2;
+            int rdep = rightStart < 0 || rightStart < leftEnd ? pattern.Length : rightStart;
 
             if (ldep > rdep) {
-                throw new ArgumentException($"Wrong format of dependecy pattern '{pattern}' (maybe --> instead of --->?)");
+                throw new ArgumentException(
+                    $"Wrong format of dependecy pattern '{pattern}' (maybe --> instead of --->?)");
             }
 
-            string dep = pattern.Substring(ldep, rdep - ldep);
-            return new DependencyMatch(usingTypeHint, left.Trim(), dep.Trim(), usedTypeHint, right.Trim(), ignoreCase);
+            string dep = pattern.Substring(ldep, rdep - ldep).Trim();
+            if (Pattern.IsPrefixAndSuffixAsterisksPattern(dep)) {
+                var usingPattern = new SingleDependencyMatch(usingTypeHint, dep, "", usedTypeHint, "", ignoreCase);
+                var usedPattern = new SingleDependencyMatch(usingTypeHint, dep, "", usedTypeHint, "", ignoreCase);
+                return new DependencyMatchDisjunction(pattern, new[] { usingPattern, usedPattern });
+            } else {
+                return new SingleDependencyMatch(usingTypeHint, left, dep, usedTypeHint, right, ignoreCase);
+            }
         }
 
-        public bool IsMatch<TItem>([NotNull] AbstractDependency<TItem> d) where TItem : AbstractItem<TItem> {
-            MatchResult matchLeft = UsingMatch == null ? new MatchResult(true, null) : UsingMatch.Matches(d.UsingItem, NO_STRINGS);
-            return matchLeft.Success
-                   && (DependencyPattern == null || DependencyPattern.IsMatch(d))
-                   && (UsedMatch == null || UsedMatch.Matches(d.UsedItem, matchLeft.Groups).Success);
-        }
+        public abstract bool IsMatch<TItem>([NotNull] AbstractDependency<TItem> d) where TItem : AbstractItem<TItem>;
+
 
         public static readonly string DEPENDENCY_MATCH_HELP = @"
 TBD
@@ -89,5 +68,58 @@ matches all dependencies with a questionable count, but no bad count.
 
 The marker pattern is described in the help text for 'marker'.
 ";
+    }
+
+    public class DependencyMatchDisjunction : DependencyMatch {
+        private readonly IEnumerable<DependencyMatch> _alternatives;
+
+        public DependencyMatchDisjunction(string representation, IEnumerable<DependencyMatch> alternatives)
+            : base(representation) {
+            _alternatives = alternatives;
+        }
+
+        public override bool IsMatch<TItem>(AbstractDependency<TItem> d) {
+            return _alternatives.Any(a => a.IsMatch(d));
+        }
+    }
+
+
+    public class SingleDependencyMatch : DependencyMatch {
+        [CanBeNull]
+        public ItemMatch UsingMatch {
+            get;
+        }
+        [CanBeNull]
+        public DependencyPattern DependencyPattern {
+            get;
+        }
+        [CanBeNull]
+        public ItemMatch UsedMatch {
+            get;
+        }
+
+        private static readonly string[] NO_STRINGS = new string[0];
+
+        public SingleDependencyMatch([CanBeNull] ItemMatch usingMatch,
+            [CanBeNull] DependencyPattern dependencyPattern, [CanBeNull] ItemMatch usedMatch,
+            string representation) : base(representation) {
+            UsingMatch = usingMatch;
+            DependencyPattern = dependencyPattern;
+            UsedMatch = usedMatch;
+        }
+
+        public SingleDependencyMatch(ItemType usingTypeHint, string usingPattern, string dependencyPattern, ItemType usedTypeHint, string usedPattern, bool ignoreCase) : this(
+            usingPattern != "" ? new ItemMatch(usingTypeHint, usingPattern, 0, ignoreCase, anyWhereMatcherOk: false) : null,
+            dependencyPattern != "" ? new DependencyPattern(dependencyPattern, ignoreCase) : null,
+            usedPattern != "" ? new ItemMatch(usedTypeHint, usedPattern, usingPattern.Count(c => c == '('), ignoreCase, anyWhereMatcherOk: false) : null,
+            usingPattern + "--" + dependencyPattern + "->" + usedPattern) {
+        }
+
+        public override bool IsMatch<TItem>([NotNull] AbstractDependency<TItem> d) {
+            MatchResult matchLeft = UsingMatch == null ? new MatchResult(true, null) : UsingMatch.Matches(d.UsingItem, NO_STRINGS);
+            return matchLeft.Success
+                   && (DependencyPattern == null || DependencyPattern.IsMatch(d))
+                   && (UsedMatch == null || UsedMatch.Matches(d.UsedItem, matchLeft.Groups).Success);
+        }
     }
 }

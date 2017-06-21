@@ -98,7 +98,8 @@ namespace Archichect.Markers {
             return GetValue(new EqualsMatcher(marker, ignoreCase));
         }
 
-        public static string CreateReadableDefaultMarker(IEnumerable<ItemMatch> fromItemMatches, IEnumerable<ItemMatch> toItemMatches, string defaultName) {
+        public static string CreateReadableDefaultMarker(IEnumerable<ItemMatch> fromItemMatches,
+                IEnumerable<ItemMatch> toItemMatches, string defaultName) {
             string fromPart = FirstReadableName(fromItemMatches);
             string toPart = FirstReadableName(toItemMatches);
             string marker = fromPart == null

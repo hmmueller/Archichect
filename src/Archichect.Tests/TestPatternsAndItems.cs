@@ -56,7 +56,7 @@ namespace Archichect.Tests {
         }
 
         private static DependencyRule CreateDependencyRule(ItemType itemType, string left, string right) {
-            return new DependencyRule(new DependencyMatch(itemType, left, "", itemType, right, IGNORECASE), 
+            return new DependencyRule(new SingleDependencyMatch(itemType, left, "", itemType, right, IGNORECASE), 
                 new DependencyRuleSource("TEST", 0, left + "--->" + right, false, left)
             );
         }

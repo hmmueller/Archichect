@@ -6,11 +6,11 @@ namespace Archichect.Transforming.ViolationChecking {
     // be moved there, and this class completely removed ...
     public class DependencyRule {
         [NotNull]
-        private readonly DependencyMatch _match;
+        private readonly SingleDependencyMatch _match;
             
         private int _hitCount;
 
-        public DependencyRule([NotNull] DependencyMatch match, [NotNull] DependencyRuleSource source) {
+        public DependencyRule([NotNull] SingleDependencyMatch match, [NotNull] DependencyRuleSource source) {
             _match = match;
             Source = source;
         }
