@@ -640,22 +640,24 @@ Archichect:Tests ---> **
                                 Assert.AreEqual(0, returnValue);
 
                                 using (var tr = new StreamReader(result.FileName)) {
-                                    string resultContents = tr.ReadToEnd().Trim();
-                                    Assert.IsTrue(resultContents.StartsWith("START"));
-                                    Assert.IsTrue(resultContents.EndsWith("END"));
-
-                                    Assert.IsTrue(
-                                        resultContents.Contains(
-                                            @"script1.nd value1 defaultValue2 value3 defaultValue4 F5 
-script1a.nd value1a 2=value3 defaultValue3 defaultValue4 globalF5 
-script1.nd value1 defaultValue2 value3 defaultValue4 globalF5 
-script2.nd value1 defaultValue2 defaultValue3 defaultValue4 globalF5"));
-                                }
+                                    AssertNextLineIsEqual(tr, "START");
+                                    AssertNextLineIsEqual(tr, "script1.nd value1 defaultValue2 value3 defaultValue4 F5");
+                                    AssertNextLineIsEqual(tr, "script1a.nd value1a 2=value3 defaultValue3 defaultValue4 globalF5");
+                                    AssertNextLineIsEqual(tr, "script1.nd value1 defaultValue2 value3 defaultValue4 globalF5");
+                                    AssertNextLineIsEqual(tr, "script2.nd value1 defaultValue2 defaultValue3 defaultValue4 globalF5");
+                                    AssertNextLineIsEqual(tr, "END");
+                               }
                             }
                         }
                     }
                 }
             }
+        }
+
+        private static void AssertNextLineIsEqual(StreamReader tr, string expected) {
+            string line = tr.ReadLine();
+            Assert.IsNotNull(line);
+            Assert.AreEqual(expected, line.Trim());
         }
 
         [TestMethod]
