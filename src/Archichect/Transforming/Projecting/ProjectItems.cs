@@ -115,10 +115,10 @@ Examples:
                             _createProjector = (p, i) => new SimpleProjector(p, name: "default projector");
                             break;
                         case "PT":
-                            _createProjector = (p, i) => new SelfOptimizingPrefixTrieProjector(p, i, 1000, name: "PT projector");
+                            _createProjector = (p, i) => new SelfOptimizingPrefixTrieProjector(p, i, 30000, name: "PT projector");
                             break;
                         case "FL":
-                            _createProjector = (p, i) => new SelfOptimizingFirstLetterProjector(p, i, 1000, name: "FL projector");
+                            _createProjector = (p, i) => new SelfOptimizingFirstLetterProjector(p, i, 10000, name: "FL projector");
                             break;
                         default:
                             Log.WriteWarning($"Unrecognized matcher optimization strategy {strategy} - using default");
@@ -248,6 +248,9 @@ Examples:
                 [NotNull] TransformOptions transformOptions, [NotNull] [ItemNotNull] IEnumerable<Dependency> dependencies,
                 [NotNull] List<Dependency> transformedDependencies) {
 
+            var leftProjectionCache = new Dictionary<Item, Item>();
+            var righttProjectionCache = new Dictionary<Item, Item>();
+
             if (transformOptions.BackProjectionDependencies != null) {
                 Dictionary<FromTo, Dependency> dependenciesForBackProjection = dependencies.ToDictionary(
                         d => new FromTo(d.UsingItem, d.UsedItem), d => d);
@@ -260,7 +263,8 @@ Examples:
                 var mapItems = new Dictionary<Item, Item>();
                 foreach (var d in transformOptions.BackProjectionDependencies) {
                     FromTo f = ProjectDependency(globalContext.CurrentGraph, d, localCollector,
-                                                 onMissingPattern: () => OnMissingPattern(ref missingPatternCount));
+                                                 onMissingPattern: () => OnMissingPattern(ref missingPatternCount),
+                                                 leftProjectionCache: leftProjectionCache, rightProjectionCache: righttProjectionCache);
 
                     if (f != null) {
                         Dependency projected;
@@ -289,7 +293,8 @@ Examples:
                 var localCollector = new Dictionary<FromTo, Dependency>();
                 int missingPatternCount = 0;
                 foreach (var d in dependencies) {
-                    ProjectDependency(globalContext.CurrentGraph, d, localCollector, () => OnMissingPattern(ref missingPatternCount));
+                    ProjectDependency(globalContext.CurrentGraph, d, localCollector, onMissingPattern: () => OnMissingPattern(ref missingPatternCount),
+                                      leftProjectionCache: leftProjectionCache, rightProjectionCache: righttProjectionCache);
                 }
                 transformedDependencies.AddRange(localCollector.Values);
             }
@@ -312,9 +317,9 @@ Examples:
         }
 
         private FromTo ProjectDependency(WorkingGraph currentWorkingGraph, Dependency d, Dictionary<FromTo, Dependency> localCollector,
-                                         Func<bool> onMissingPattern) {
-            Item usingItem = _projector.Project(cachingGraph: currentWorkingGraph, item: d.UsingItem, left: true);
-            Item usedItem = _projector.Project(cachingGraph: currentWorkingGraph, item: d.UsedItem, left: false);
+            Dictionary<Item, Item> leftProjectionCache, Dictionary<Item, Item> rightProjectionCache, Func<bool> onMissingPattern) {
+            Item usingItem = Project(currentWorkingGraph, d.UsingItem, leftProjectionCache, true);
+            Item usedItem = Project(currentWorkingGraph, d.UsedItem, rightProjectionCache, false);
 
             if (usingItem == null) {
                 if (onMissingPattern()) {
@@ -332,6 +337,15 @@ Examples:
             } else {
                 return new FromTo(usingItem, usedItem).AggregateDependency(currentWorkingGraph, d, localCollector);
             }
+        }
+
+        private Item Project(WorkingGraph currentWorkingGraph, Item item, Dictionary<Item, Item> cachedProjections, bool left) {
+            Item result;
+            if (!cachedProjections.TryGetValue(item, out result)) {
+                result = _projector.Project(cachingGraph : currentWorkingGraph, item : item, left : left);
+                cachedProjections.Add(item, result);
+            }
+            return result;
         }
 
         public override IEnumerable<Dependency> CreateSomeTestDependencies(WorkingGraph transformingGraph) {
@@ -358,7 +372,7 @@ Examples:
 
                 Log.WriteInfo("Match counts - projection definitions:");
                 foreach (var p in asList) {
-                    Log.WriteInfo($"{p.MatchCount,5} - {p.Source}");
+                    Log.WriteInfo($"{p.MatchCount,5} - {p.ItemMatch.Representation} @ {p.Source}");
                 }
             }
         }

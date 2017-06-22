@@ -8,6 +8,7 @@ namespace Archichect.Transforming.Projecting {
             double CostPerProjection { get; }
 
             void ReduceCostCountsInReorganizeToForgetHistory();
+            void DumpForDebugging();
         }
 
         public abstract class AbstractSelfOptimizingProjector<TResortableProjectorWithCost> : AbstractProjector 
@@ -34,6 +35,8 @@ namespace Archichect.Transforming.Projecting {
                 // ReSharper disable once VirtualMemberCallInConstructor 
                 _projectors = CreateResortableProjectors(orderedProjections);
 
+                DumpProjectorsForDebugging();
+
                 _fallBackProjector = new SimpleProjector(orderedProjections, name: "fallback");
             }
 
@@ -46,10 +49,23 @@ namespace Archichect.Transforming.Projecting {
                 foreach (var p in _projectors) {
                     p.ReduceCostCountsInReorganizeToForgetHistory();
                 }
+                DumpProjectorsForDebugging();
+            }
+
+            private void DumpProjectorsForDebugging() {
+                if (Log.IsChattyEnabled) {
+                    Log.WriteDebug("--------- ProjectItems.DumpProjectorsForDebugging ---------");
+                    foreach (var p in _projectors) {
+                        p.DumpForDebugging();
+                    }
+                }
             }
 
             public override Item Project(WorkingGraph cachingGraph, Item item, bool left) {
                 if (_stepsToNextReorganize-- < 0) {
+                    if (Log.IsChattyEnabled) {
+                        Log.WriteDebug($"ProjectItems.Reorg after {_reorganizeInterval} steps at {DateTime.Now}");
+                    }
                     Reorganize();
                     _reorganizeInterval += _reorganizeIntervalIncrement;
                     _stepsToNextReorganize = _reorganizeInterval;

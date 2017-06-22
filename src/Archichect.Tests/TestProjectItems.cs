@@ -78,11 +78,11 @@ namespace Archichect.Tests {
             // !b           0 _ 4th
             // !ca+!cb      4 _ 3rd
             // !s+!t        7 _ 1st
-            // ... hoever, because of the "forgetting" feature, the order is not exactly as above
+            // ... however, because of the "forgetting" feature, the order is not exactly as above
             ProjectItems.FirstLetterMatchProjector[] projectors = usedProjector.ProjectorsForTesting.ToArray();
             Assert.AreEqual("=a", projectors[0].Name);
-            Assert.AreEqual("#abc", projectors[1].Name);
-            Assert.AreEqual("=c", projectors[2].Name);
+            Assert.AreEqual("=c", projectors[1].Name);
+            Assert.AreEqual("#abc", projectors[2].Name);
             Assert.AreEqual("=b", projectors[3].Name);
         }
 

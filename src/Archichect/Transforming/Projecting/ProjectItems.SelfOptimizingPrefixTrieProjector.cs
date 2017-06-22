@@ -19,8 +19,6 @@ namespace Archichect.Transforming.Projecting {
             [NotNull]
             private SimpleProjector _projectorToUseIfNoCharMatches;
 
-            private Projection[] _projections;
-
             // ReSharper disable once NotNullMemberIsNotInitialized - reliably set in SetProjector
             public TrieNode(IEqualityComparer<char> equalityComparer) {
                 _children = new Dictionary<char, TrieNode>(equalityComparer);
@@ -45,25 +43,25 @@ namespace Archichect.Transforming.Projecting {
                     matchingProjections.Where(pfp => pfp.FixedPrefix == "" ||
                         !_children.Keys.Any(c => pfp.FixedPrefix.StartsWith(triePath + c)));
 
-                _projections = mightLandHere.Select(pfp => pfp.Projection).ToArray();
-                _projectorToUseIfNoCharMatches = new SimpleProjector(_projections, name: $"trie[{triePath}]");
+                Projection[] projections = mightLandHere.Select(pfp => pfp.Projection).ToArray();
+                _projectorToUseIfNoCharMatches = new SimpleProjector(projections, name: $"trie[{triePath}]");
 
                 int nodeCount = 1;
                 foreach (var kvp in _children) {
-                    nodeCount += kvp.Value.SetProjectors(triePath + kvp.Key,  pfps);
+                    nodeCount += kvp.Value.SetProjectors(triePath + kvp.Key, pfps);
                 }
                 return nodeCount;
             }
 
             [NotNull]
-            public SimpleProjector SelectProjector(string triePath) {
-                if (triePath == "") {
+            public SimpleProjector SelectProjector(string triePath, int pos) {
+                if (pos >= triePath.Length) {
                     return _projectorToUseIfNoCharMatches;
                 } else {
-                    char c = triePath[0];
+                    char c = triePath[pos];
                     TrieNode childNode;
                     return _children.TryGetValue(c, out childNode)
-                        ? childNode.SelectProjector(triePath.Substring(1))
+                        ? childNode.SelectProjector(triePath, pos + 1)
                         : _projectorToUseIfNoCharMatches;
                 }
             }
@@ -82,12 +80,28 @@ namespace Archichect.Transforming.Projecting {
                     child.ReduceCostCountsInReorganizeToForgetHistory();
                 }
             }
+
+            public void DumpForDebugging(string indent) {
+                Log.WriteDebug(indent + " mc=" + GetMatchCount() + " pc=" + GetProjectCount());
+                _projectorToUseIfNoCharMatches.DumpForDebugging(indent);
+                if (_children.Count == 1) {
+                    KeyValuePair<char, TrieNode> child = _children.First();
+                    child.Value.DumpForDebugging(indent + child.Key);
+                } else {
+                    foreach (var kvp in _children.OrderBy(kvp => kvp.Key)) {
+                        kvp.Value.DumpForDebugging(indent + kvp.Key);
+                    }
+                }
+            }
         }
 
         public class TrieNodeProjector : AbstractProjector, IResortableProjectorWithCost {
+            [NotNull]
             private readonly TrieNode _root;
             private readonly int _fieldPos;
-            public int NodeCount { get; }
+            public int NodeCount {
+                get;
+            }
 
             public TrieNodeProjector(Projection[] orderedProjections, int fieldPos, IEqualityComparer<char> equalityComparer, string name)
                 : base(name) {
@@ -104,7 +118,7 @@ namespace Archichect.Transforming.Projecting {
             }
 
             public override Item Project(WorkingGraph cachingGraph, Item item, bool left) {
-                return _root.SelectProjector(item.Values.ElementAtOrDefault(_fieldPos)).Project(cachingGraph, item, left);
+                return _root.SelectProjector(item.Values.ElementAtOrDefault(_fieldPos), 0).Project(cachingGraph, item, left);
             }
 
             public double CostPerProjection => (_root.GetMatchCount() + 1e-3) / (_root.GetProjectCount() + 1e-9);
@@ -115,6 +129,10 @@ namespace Archichect.Transforming.Projecting {
 
             public void ReduceCostCountsInReorganizeToForgetHistory() {
                 _root.ReduceCostCountsInReorganizeToForgetHistory();
+            }
+
+            public void DumpForDebugging() {
+                _root.DumpForDebugging("  ");
             }
         }
 
@@ -184,9 +202,9 @@ namespace Archichect.Transforming.Projecting {
                 return result;
             }
 
-            protected override TrieNodeProjector SelectProjector(IReadOnlyList<TrieNodeProjector> projectors, 
+            protected override TrieNodeProjector SelectProjector(IReadOnlyList<TrieNodeProjector> projectors,
                                                                  Item item, bool left, int stepsToNextReorganize) {
-                return stepsToNextReorganize >= 0 && stepsToNextReorganize < projectors.Count 
+                return stepsToNextReorganize >= 0 && stepsToNextReorganize < projectors.Count
                     ? projectors[stepsToNextReorganize] // Give other projectors a small chance to show off
                     : projectors[0];
             }

@@ -24,12 +24,11 @@ namespace Archichect {
             }
             _type = type;
             for (int i = 0; i < values.Length; i++) {
-                if (values[i].Length > 30) {
+                if (values[i] != null && values[i].Length < 50) {
                     values[i] = string.Intern(values[i]);
                 }
             }
             IEnumerable<string> enoughValues = values.Length < type.Length ? values.Concat(Enumerable.Range(0, type.Length - values.Length).Select(i => "")) : values;
-            //Values = enoughValues.Select(v => v == null ? null : string.Intern(v)).ToArray();
             Values = values == enoughValues ? values : enoughValues.ToArray();
             CasedValues = type.IgnoreCase ? enoughValues.Select(v => v.ToUpperInvariant()).ToArray() : Values;
         }

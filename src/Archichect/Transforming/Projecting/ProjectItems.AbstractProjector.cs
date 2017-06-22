@@ -23,7 +23,6 @@ namespace Archichect.Transforming.Projecting {
         }
 
         public abstract class AbstractProjectorWithProjectionList : AbstractProjector {
-
             protected readonly Projection[] _orderedProjections;
             private int _projectCount;
             private int _matchCount;
@@ -60,6 +59,13 @@ namespace Archichect.Transforming.Projecting {
 
             public override Item Project(WorkingGraph cachingGraph, Item item, bool left) {
                 return ProjectBySequentialSearch(cachingGraph, item, left);
+            }
+
+            public void DumpForDebugging(string indent) {
+                Log.WriteDebug(indent + " " + Name + " " + GetType().Name);
+                foreach (var p in _orderedProjections) {
+                    Log.WriteDebug(indent + "  --> " + p);
+                }
             }
         }
     }

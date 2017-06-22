@@ -21,6 +21,13 @@ namespace Archichect.Transforming.Projecting {
             public int CompareTo(IResortableProjectorWithCost other) {
                 return CostPerProjection.CompareTo(other.CostPerProjection);
             }
+
+            public void DumpForDebugging() {
+                Log.WriteDebug(Name);
+                foreach (var p in _orderedProjections) {
+                    Log.WriteDebug("   " + p);
+                }
+            }
         }
 
         public class SelfOptimizingFirstLetterProjector : AbstractSelfOptimizingProjector<FirstLetterMatchProjector> {
