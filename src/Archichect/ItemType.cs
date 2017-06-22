@@ -57,6 +57,8 @@ namespace Archichect {
         [NotNull, ItemNotNull]
         public readonly string[] SubKeys;
 
+        private readonly int _hash;
+
         private ItemType([NotNull] string name, [NotNull] string[] keys, [NotNull] string[] subKeys, bool matchesOnFieldNr, bool ignoreCase, bool predefined) {
             if (keys.Length == 0) {
                 throw new ArgumentException($"Item type {name} is defined with zero fields; this is not supported. Please correct type definition.", nameof(keys));
@@ -77,6 +79,8 @@ namespace Archichect {
             _matchesOnFieldNr = matchesOnFieldNr;
             _predefined = predefined;
             IgnoreCase = ignoreCase;
+
+            _hash = name.GetHashCode();
         }
 
         public static IEnumerable<ItemType> AllRegisteredTypes() {
@@ -116,22 +120,23 @@ namespace Archichect {
         public int Length => Keys.Length;
 
         public bool Equals(ItemType other) {
-            if (ReferenceEquals(other, this)) {
-                return true;
-            }
             // ReSharper disable once UseNullPropagation - clearer for me
             if (other == null) {
                 return false;
-            }
-            if (Keys.Length != other.Keys.Length) {
+            } else if (_hash != other._hash) {
                 return false;
-            }
-            for (int i = 0; i < Keys.Length; i++) {
-                if (Keys[i] != other.Keys[i] || SubKeys[i] != other.SubKeys[i]) {
-                    return false;
+            } else if (ReferenceEquals(other, this)) {
+                return true;
+            } else if (Keys.Length != other.Keys.Length) {
+                return false;
+            } else {
+                for (int i = 0; i < Keys.Length; i++) {
+                    if (Keys[i] != other.Keys[i] || SubKeys[i] != other.SubKeys[i]) {
+                        return false;
+                    }
                 }
+                return true;
             }
-            return true;
         }
 
         public override bool Equals(object obj) {
@@ -140,7 +145,7 @@ namespace Archichect {
 
         [DebuggerHidden]
         public override int GetHashCode() {
-            return Name.GetHashCode();
+            return _hash;
         }
 
         [ExcludeFromCodeCoverage]

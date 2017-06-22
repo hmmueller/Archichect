@@ -5,11 +5,13 @@ namespace Archichect.Matching {
         private static readonly string[] NO_GROUPS = new string[0];
 
         public readonly bool Success;
+
+        [CanBeNull, ItemNotNull]
         private readonly string[] _groups;
 
         public string[] Groups => _groups ?? NO_GROUPS;
 
-        public MatchResult(bool success, string[] groups) {
+        public MatchResult(bool success, [CanBeNull, ItemNotNull] string[] groups) {
             Success = success;
             _groups = groups;
         }

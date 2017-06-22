@@ -18,13 +18,19 @@ namespace Archichect {
         [NotNull]
         public readonly string[] CasedValues;
 
-        protected ItemSegment([NotNull] ItemType type, [NotNull] string[] values) {
+        protected ItemSegment([NotNull] ItemType type, [NotNull, ItemNotNull] string[] values) {
             if (type == null) {
                 throw new ArgumentNullException(nameof(type));
             }
             _type = type;
+            for (int i = 0; i < values.Length; i++) {
+                if (values[i].Length > 30) {
+                    values[i] = string.Intern(values[i]);
+                }
+            }
             IEnumerable<string> enoughValues = values.Length < type.Length ? values.Concat(Enumerable.Range(0, type.Length - values.Length).Select(i => "")) : values;
-            Values = enoughValues.Select(v => v == null ? null : string.Intern(v)).ToArray();
+            //Values = enoughValues.Select(v => v == null ? null : string.Intern(v)).ToArray();
+            Values = values == enoughValues ? values : enoughValues.ToArray();
             CasedValues = type.IgnoreCase ? enoughValues.Select(v => v.ToUpperInvariant()).ToArray() : Values;
         }
 
@@ -63,10 +69,10 @@ namespace Archichect {
     }
 
     public sealed class ItemTail : ItemSegment {
-        private ItemTail([NotNull]ItemType type, [NotNull]string[] values) : base(type, values) {
+        private ItemTail([NotNull]ItemType type, [NotNull, ItemNotNull] string[] values) : base(type, values) {
         }
 
-        public static ItemTail New(Intern<ItemTail> cache, [NotNull] ItemType type, [NotNull] string[] values) {
+        public static ItemTail New(Intern<ItemTail> cache, [NotNull] ItemType type, [NotNull, ItemNotNull] string[] values) {
             return cache.GetReference(new ItemTail(type, values));
         }
 
@@ -217,7 +223,7 @@ namespace Archichect {
         Item CreateItem([NotNull] ItemType type, [ItemNotNull] string[] values);
 
         Dependency CreateDependency([NotNull] Item usingItem, [NotNull] Item usedItem, [CanBeNull] ISourceLocation source,
-            [CanBeNull] IMarkerSet markers, int ct, int questionableCt = 0, int badCt = 0, string notOkReason = null, 
+            [CanBeNull] IMarkerSet markers, int ct, int questionableCt = 0, int badCt = 0, string notOkReason = null,
             [CanBeNull] string exampleInfo = null);
     }
 

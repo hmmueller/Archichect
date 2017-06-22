@@ -375,7 +375,7 @@ namespace Archichect.Reading.AssemblyReading {
                         Property = customAttribute.Properties.FirstOrDefault(p => p.Name == k)
                     });
                     string[] values = args.Select(a => a.Property.Name == null
-                        ? parent?.Values[a.Index]
+                        ? parent?.Values[a.Index] ?? ""
                         : "" + a.Property.Argument.Value).ToArray();
                     return ItemTail.New(readingGraph.ItemTailCache, itemType, values);
                 }
