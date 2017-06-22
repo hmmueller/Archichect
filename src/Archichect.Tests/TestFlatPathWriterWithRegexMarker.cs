@@ -245,8 +245,7 @@ T3:d:dd:ddd'A $", result.Trim());
         [TestMethod]
         public void TestAddImplementsDependencies() {
             using (var dipFile = DisposingFile.CreateTempFileWithTail(".dip").Keep) {
-                int result =
-                    Program.Main(new[] {
+                int result = Program.Main(new[] {
                         MainTests.TestAssemblyPath,
                         Program.TransformOption.Opt, typeof(PathMarker).Name, "{",
                             PathMarker.DefineItemMatchOption.Opt, "C", "'_class",
@@ -268,6 +267,7 @@ T3:d:dd:ddd'A $", result.Trim());
 
                 using (var tr = new StreamReader(dipFile.FileName)) {
                     string o = tr.ReadToEnd().Trim();
+                    Console.WriteLine(o);
 
                     AssertImplements(o, "AbstractImplementingClass", "ISomeBaseInterface");
                     AssertImplements(o, "ImplementingClass1", "ISomeBaseInterface");

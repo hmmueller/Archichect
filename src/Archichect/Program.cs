@@ -14,7 +14,7 @@ using Archichect.WebServing;
 
 namespace Archichect {
     public class Program {
-        public const string VERSION = "V.0.39b";
+        public const string VERSION = "V.0.39c";
 
         public const int OK_RESULT = 0;
         public const int OPTIONS_PROBLEM = 180;
@@ -88,7 +88,7 @@ namespace Archichect {
         public static readonly Option HelpDetailedHelpOption = new ProgramOption(shortname: "!", name: "help-detail", usage: "[filter]", description: "write extensive help", moreNames: new[] { "man" });
         public static readonly Option DebugOption = new ProgramOption(shortname: "debug", name: "debug", usage: "", description: "start .Net debugger");
 
-        public static readonly Option CloneGraphOption = new ProgramOption(shortname: "gc", name: "graph-clone", usage: "[name] [name...]", description: "Default name: _ + number; default cloned is current one)");
+        public static readonly Option ReplicateGraphOption = new ProgramOption(shortname: "gr", name: "graph-replicate", usage: "[name] [name...]", description: "Default name: _ + number; default replicated is current one)");
         public static readonly Option CreateEmptyGraphOption = new ProgramOption(shortname: "ge", name: "graph-empty", usage: "[name]", description: "Default name: name: _ + number)");
         public static readonly Option RenameGraphOption = new ProgramOption(shortname: "gn", name: "graph-name", usage: "name", description: "Rename current graph");
         public static readonly Option DeleteGraphOption = new ProgramOption(shortname: "gd", name: "graph-delete", usage: "[name]", description: "default: current; then the previous one on stack becomes current");
@@ -97,10 +97,10 @@ namespace Archichect {
         public static readonly Option WorkingGraphOption = new ProgramOption(shortname: "gw", name: "graph-work", usage: "[name|#]", description: "move to top stack position");
         public static readonly Option GraphListOption = new ProgramOption(shortname: "gl", name: "graph-list", usage: "| gv", description: "", moreNames: new[] { "gv" });
         public static readonly Option AutoGraphForTransformOption = new ProgramOption(shortname: "gt", name: "graph-for-transform", usage: "[#]", description: "Create a new graph for each transform; default: 10");
-        public static readonly Option AutoGraphForReadOption = new ProgramOption(shortname: "gr", name: "graph-for-read", usage: "[#]", description: "Create a new graph for each read; default: no new graph for read");
+        public static readonly Option AutoGraphForReadOption = new ProgramOption(shortname: "ga", name: "graph-for-read", usage: "[#]", description: "Create a new graph for each read; default: no new graph for read");
         public static readonly Option GraphViewOnlyOption = new ProgramOption(shortname: "gv", name: "graph-view-only", usage: "pattern", description: "Limit dependencies visible to transformers and writers");
         public static readonly Option GraphUnviewOption = new ProgramOption(shortname: "gu", name: "graph-unview", usage: "[string]", description: "Remove visibility limitation");
-        public static readonly Option GraphFiltersOption = new ProgramOption(shortname: "gf", name: "graph-filters", usage: "", description: $"Show all visibility filters used defined by {GraphViewOnlyOption}");
+        public static readonly Option GraphFiltersOption = new ProgramOption(shortname: "gf", name: "graph-filters", usage: "", description: $"Show all visibility filters used by {GraphViewOnlyOption}");
 
         public static readonly Option FactoryAddOption = new ProgramOption(shortname: "fa", name: "factory-add", usage: "assembly factory", description: "Add factory to front of global item and dependency factory list");
         public static readonly Option FactoryForGraphAddOption = new ProgramOption(shortname: "fg", name: "factory-add-to-graph", usage: "assembly factory", description: "Add factory to front of item and dependency factory list of current graph");
@@ -170,6 +170,7 @@ namespace Archichect {
         public static readonly Option ListItemsOption = new ProgramOption(shortname: "li", name: "list-items", usage: "# [pattern]", description: "write about # items matching pattern from all sources");
         public static readonly Option CountDependenciesOption = new ProgramOption(shortname: "nd", name: "count-dependencies", usage: "[pattern]", description: "Show number of dependencies matching pattern from all sources");
         public static readonly Option CountItemsOption = new ProgramOption(shortname: "ni", name: "count-items", usage: "[pattern]", description: "Show number of items matching pattern from all sources");
+        public static readonly Option ListTypesOption = new ProgramOption(shortname: "lt", name: "list-types", usage: "[filter]", description: "List all types matching filter with their fields; default: all types are shown");
 
         public static readonly Option CurrentDirectoryOption = new ProgramOption(shortname: "cd", name: "current-directory", usage: "[directory]", description: "show or change current directory");
         public static readonly Option ListFilesOption = new ProgramOption(shortname: "ls", name: "list", usage: "[-r] [filespec]", description: "list matching files");
@@ -182,11 +183,12 @@ namespace Archichect {
         private static readonly Option[] _allOptions = {
             HelpAllOption, HelpDetailedHelpOption, DebugOption,
 
-            ReadPluginOption, ReadOption, ReadFileOption, ReadPluginHelpOption, ReadHelpOption, ReadPluginDetailedHelpOption, ReadDetailedHelpOption,
+            ReadPluginOption, ReadOption, ReadFileOption, ReadPluginHelpOption, ReadHelpOption, ReadPluginDetailedHelpOption,
+            ReadDetailedHelpOption,
 
             ConfigurePluginOption, ConfigureOption,
 
-            CloneGraphOption, CreateEmptyGraphOption, RenameGraphOption, DeleteGraphOption, IncludeGraphOption,
+            ReplicateGraphOption, CreateEmptyGraphOption, RenameGraphOption, DeleteGraphOption, IncludeGraphOption,
             WorkingGraphOption, GraphListOption, AutoGraphForTransformOption, AutoGraphForReadOption,
             GraphViewOnlyOption, GraphUnviewOption, GraphFiltersOption,
 
@@ -196,11 +198,11 @@ namespace Archichect {
             WritePluginOption, WriteFileOption, WriteDipOption, WriteTestDataOption, WritePluginHelpOption, WriteHelpOption,
             WritePluginDetailedHelpOption, WriteDetailedHelpOption,
 
-            CalculatePluginOption, CalculateOption, CalculatePluginHelpOption, CalculateHelpOption, CalculatePluginDetailedHelpOption,
-            CalculateDetailedHelpOption,
+            CalculatePluginOption, CalculateOption, CalculatePluginHelpOption, CalculateHelpOption,
+            CalculatePluginDetailedHelpOption, CalculateDetailedHelpOption,
 
-            DoBreakOption, DoCommandOption, DoScriptOption, DoScriptLoggedOption, DoScriptHelpOption, DoDefineOption, DoResetOption,
-            DoTimeOption,
+            DoBreakOption, DoCommandOption, DoScriptOption, DoScriptLoggedOption, DoScriptHelpOption, DoDefineOption,
+            DoResetOption, DoTimeOption,
 
             WatchFilesOption, UnwatchFilesOption, UnwatchTriggersOption,
 
@@ -208,10 +210,11 @@ namespace Archichect {
 
             IgnoreCaseOption,
 
-            InteractiveOption, InteractiveStopOption, ListDependenciesOption, ListItemsOption, CountDependenciesOption, CountItemsOption,
+            InteractiveOption, InteractiveStopOption, ListDependenciesOption, ListItemsOption, CountDependenciesOption,
+            CountItemsOption, ListTypesOption,
 
-            CurrentDirectoryOption, ListFilesOption, GarbageCollectionOption, LogVerboseOption, LogChattyOption, LogReducedOption,
-            LazyOption,
+            CurrentDirectoryOption, ListFilesOption, GarbageCollectionOption, LogVerboseOption, LogChattyOption,
+            LogReducedOption, LazyOption,
         };
 
         private readonly List<FileWatcher> _fileWatchers = new List<FileWatcher>();
@@ -233,7 +236,8 @@ namespace Archichect {
             try {
                 var globalContext = new GlobalContext();
 
-                int lastResult = program.Run(args, new string[0], globalContext, writtenMasterFiles: null, logCommands: false);
+                int lastResult = program.Run(args, new string[0], globalContext, writtenMasterFiles: null, 
+                    logCommands: false, maxNumberOfNewImplicitGraphs: int.MaxValue);
 
                 while (program._webServer != null || program._interactiveLogFile != null || program._fileWatchers.Any()) {
                     Console.WriteLine();
@@ -261,7 +265,8 @@ namespace Archichect {
 
                             program.Run(args: commands.Split(' ').Select(s => s.Trim()).Where(s => s != "").ToArray(),
                                 passedValues: new string[0], globalContext: globalContext,
-                                writtenMasterFiles: writtenMasterFiles, logCommands: false);
+                                writtenMasterFiles: writtenMasterFiles, logCommands: false,
+                                maxNumberOfNewImplicitGraphs: int.MaxValue);
 
                             program.WriteWrittenMasterFiles(writtenMasterFiles);
                         }
@@ -299,7 +304,8 @@ namespace Archichect {
         }
 
         public int Run(string[] args, string[] passedValues, GlobalContext globalContext,
-                       [CanBeNull] List<string> writtenMasterFiles, bool logCommands) {
+                       [CanBeNull] List<string> writtenMasterFiles, bool logCommands,
+                       int maxNumberOfNewImplicitGraphs) {
             if (args.Length == 0) {
                 return UsageAndExit(message: "No options or files specified", globalContext: globalContext);
             }
@@ -331,7 +337,7 @@ namespace Archichect {
                         globalContext.StopAbortWatchDog();
                         globalContext.AbortTime = TimeSpan.FromMilliseconds(int.MaxValue); // max. value allowed for CancellationTokenSource.CancelAfter()
                         Debugger.Launch();
-                    } else if (CloneGraphOption.IsMatch(arg)) {
+                    } else if (ReplicateGraphOption.IsMatch(arg)) {
                         // -gc [name] [name...]    
                         string newName = ExtractOptionValue(globalContext, args, ref i);
                         IEnumerable<string> clonedNames = ExtractValueList(globalContext, args, ref i);
@@ -397,7 +403,8 @@ namespace Archichect {
                         var excludes = new List<string>();
                         ExtractFilePatterns(globalContext, args, ref i, null, includes, excludes);
 
-                        globalContext.ReadFiles(includes, excludes, assemblyName, reader);
+                        globalContext.ReadFiles(includes, excludes, assemblyName, 
+                            reader, ref maxNumberOfNewImplicitGraphs);
                     } else if (ReadFileOption.IsMatch(arg)) {
                         // -rf    reader filepattern [ +|- filepattern ...]
                         string reader = ExtractOptionValue(globalContext, args, ref i);
@@ -405,14 +412,14 @@ namespace Archichect {
                         var excludes = new List<string>();
                         ExtractFilePatterns(globalContext, args, ref i, null, includes, excludes);
 
-                        globalContext.ReadFiles(includes, excludes, "", reader);
+                        globalContext.ReadFiles(includes, excludes, "", reader, ref maxNumberOfNewImplicitGraphs);
                     } else if (ReadOption.IsMatch(arg)) {
                         // -rd    filepattern [ +|- filepattern ...]
                         var includes = new List<string>();
                         var excludes = new List<string>();
                         ExtractFilePatterns(globalContext, args, ref i, null, includes, excludes);
 
-                        globalContext.ReadFiles(includes, excludes, "", null);
+                        globalContext.ReadFiles(includes, excludes, "", null, ref maxNumberOfNewImplicitGraphs);
                     } else if (ReadPluginHelpOption.IsMatch(arg)) {
                         // -ra?    assembly [filter]
                         string assemblyName = ExtractOptionValue(globalContext, args, ref i);
@@ -451,12 +458,14 @@ namespace Archichect {
                         string assemblyName = ExtractOptionValue(globalContext, args, ref i);
                         string transformer = ExtractNextValue(globalContext, args, ref i);
                         string transformerOptions = ExtractNextValue(globalContext, args, ref i);
-                        SetResult(ref result, globalContext.Transform(assemblyName, transformer, transformerOptions));
+                        SetResult(ref result, globalContext.Transform(assemblyName, transformer, 
+                            transformerOptions, ref maxNumberOfNewImplicitGraphs));
                     } else if (TransformOption.IsMatch(arg)) {
                         // -tf    transformer  [{ options }]
                         string transformer = ExtractOptionValue(globalContext, args, ref i);
                         string transformerOptions = ExtractNextValue(globalContext, args, ref i);
-                        SetResult(ref result, globalContext.Transform("", transformer, transformerOptions));
+                        SetResult(ref result, globalContext.Transform("", transformer, 
+                            transformerOptions, ref maxNumberOfNewImplicitGraphs));
                     } else if (TransformTestDataOption.IsMatch(arg)) {
                         // -tt    assembly transformer [{ options }]
                         string assemblyName = ExtractOptionValue(globalContext, args, ref i);
@@ -606,14 +615,15 @@ namespace Archichect {
                         // -ds?    filename
                         string fileName = ExtractRequiredOptionValue(globalContext, args, ref i, "Missing script file name");
                         SetResult(ref result, RunFromFile(fileName, new string[0], globalContext, writtenMasterFiles,
-                                         logCommands: false, onlyShowParameters: true));
+                                         logCommands: false, onlyShowParameters: true, maxNumberOfNewImplicitGraphs: 0));
                     } else if (DoScriptOption.IsMatch(arg) || DoScriptLoggedOption.IsMatch(arg)) {
                         // -ds    filename
                         // -dl    filename
                         string fileName = ExtractRequiredOptionValue(globalContext, args, ref i, "Missing script file name");
                         string[] paramValues = GetParamsList(globalContext, args, ref i);
                         SetResult(ref result, RunFromFile(fileName, paramValues, globalContext, writtenMasterFiles,
-                                              logCommands: DoScriptLoggedOption.IsMatch(arg), onlyShowParameters: false));
+                                              logCommands: DoScriptLoggedOption.IsMatch(arg), onlyShowParameters: false,
+                                              maxNumberOfNewImplicitGraphs: 1));
                         // file is also an input file - and if there are no input files in -o, the error will come up there.
                         globalContext.InputFilesOrTestDataSpecified = true;
                     } else if (FormalParametersOption.IsMatch(arg)) {
@@ -637,7 +647,8 @@ namespace Archichect {
                             var excludes = new List<string>();
                             ExtractFilePatterns(globalContext, args, ref i, firstFilePattern, includes, excludes);
 
-                            globalContext.ReadFiles(includes, excludes, assemblyName: "", readerFactoryClassNameOrNull: null);
+                            globalContext.ReadFiles(includes, excludes, assemblyName: "", 
+                                readerFactoryClassNameOrNull: null, maxNumberOfNewImplicitGraphs: ref maxNumberOfNewImplicitGraphs);
                         }
                     } else if (DoTimeOption.IsMatch(arg)) {
                         globalContext.TimeLongerThan = TimeSpan.FromSeconds(ExtractRequiredIntOptionValue(globalContext, args, ref i, "Missing seconds"));
@@ -700,15 +711,19 @@ namespace Archichect {
                         WriteTarget target = ExtractWriteTarget(globalContext, args, ref i);
                         globalContext.LogAboutNDependencies(maxCount, pattern, target);
                     } else if (CountDependenciesOption.IsMatch(arg)) {
-                        // -id [pattern] [#]
+                        // -nd [pattern] [#]
                         string pattern = ExtractOptionValue(globalContext, args, ref i, allowOptionWithLeadingMinus: true /* as --x-> patterns start with -*/);
                         int maxValue = ExtractIntOptionValue(globalContext, args, ref i) ?? int.MaxValue;
                         SetResult(ref result, globalContext.LogDependencyCount(pattern, maxValue));
                     } else if (CountItemsOption.IsMatch(arg)) {
-                        // -ii [pattern] [#]
+                        // -ni [pattern] [#]
                         string pattern = ExtractOptionValue(globalContext, args, ref i, allowOptionWithLeadingMinus: true /* as --x-> patterns start with -*/);
                         int maxValue = ExtractIntOptionValue(globalContext, args, ref i) ?? int.MaxValue;
-                        SetResult(ref result, globalContext.LogItemCount(pattern, maxValue));
+                        SetResult(ref result, globalContext.LogItemCount(pattern, maxValue));                        
+                    } else if (ListTypesOption.IsMatch(arg)) {
+                        // -lt [filter]
+                        string filter = ExtractOptionValue(globalContext, args, ref i);
+                        globalContext.ShowAllTypes(filter);
                     } else if (CurrentDirectoryOption.IsMatch(arg)) {
                         // -cd    [directory]
                         string directory = ExtractOptionValue(globalContext, args, ref i);
@@ -755,17 +770,18 @@ namespace Archichect {
                         globalContext.WorkLazily = true;
                     } else if (IsNdFile(arg)) {
                         string[] paramValues = GetParamsList(globalContext, args, ref i);
-                        SetResult(ref result, RunFromFile(arg, paramValues, globalContext, writtenMasterFiles, logCommands: false, onlyShowParameters: false));
+                        SetResult(ref result, RunFromFile(arg, paramValues, globalContext, writtenMasterFiles, 
+                            logCommands: false, onlyShowParameters: false, maxNumberOfNewImplicitGraphs: 1));
                         globalContext.InputFilesOrTestDataSpecified = true;
                     } else if (globalContext.GetSuitableInternalReader("", new[] { arg }) != null) {
                         var includes = new List<string>();
                         var excludes = new List<string>();
                         ExtractFilePatterns(globalContext, args, ref i, arg, includes, excludes);
 
-                        globalContext.ReadFiles(includes, excludes, "", null);
+                        globalContext.ReadFiles(includes, excludes, "", null, ref maxNumberOfNewImplicitGraphs);
                     } else if (IsInternalTransformPlugin(arg)) {
                         string transformerOptions = ExtractNextValue(globalContext, args, ref i);
-                        SetResult(ref result, globalContext.Transform("", arg, transformerOptions));
+                        SetResult(ref result, globalContext.Transform("", arg, transformerOptions, ref maxNumberOfNewImplicitGraphs));
                     } else if (IsInternalRendererPlugin(arg)) {
                         string s = ExtractRequiredOptionValue(globalContext, args, ref i, "Missing filename or options", allowRedirection: true);
                         string masterFileName = Write(globalContext, s, args, ref i,
@@ -798,7 +814,9 @@ namespace Archichect {
 
                 if (result == OK_RESULT && !globalContext.SomethingDone) {
                     // Default action at end if nothing was done
-                    SetResult(ref result, globalContext.Transform(assemblyName: "", transformerClass: typeof(CheckDeps).FullName, transformerOptions: ""));
+                    SetResult(ref result, globalContext.Transform(assemblyName: "", 
+                        transformerClass: typeof(CheckDeps).FullName, transformerOptions: "",
+                        maxNumberOfNewImplicitGraphs: ref maxNumberOfNewImplicitGraphs));
                     globalContext.RenderToFile(assemblyName: "",
                         rendererClassName: typeof(RuleViolationWriter).FullName, rendererOptions: "", target: new WriteTarget(null, true, 10000));
                 }
@@ -999,8 +1017,9 @@ namespace Archichect {
             return GlobalContext.IsInternalPlugin<IRenderer>(arg);
         }
 
-        internal int RunFromFile([NotNull] string fileName, [NotNull, ItemNotNull] string[] passedValues, [NotNull] GlobalContext globalContext,
-                                 [CanBeNull] List<string> writtenMasterFiles, bool logCommands, bool onlyShowParameters) {
+        internal int RunFromFile([NotNull] string fileName, [NotNull, ItemNotNull] string[] passedValues, 
+            [NotNull] GlobalContext globalContext, [CanBeNull] List<string> writtenMasterFiles, 
+            bool logCommands, bool onlyShowParameters, int maxNumberOfNewImplicitGraphs) {
             if (Path.GetExtension(fileName) == "") {
                 fileName = Path.ChangeExtension(fileName, ".nd");
             }
@@ -1042,7 +1061,8 @@ namespace Archichect {
                     try {
                         Environment.CurrentDirectory = Path.GetDirectoryName(path: Path.GetFullPath(fileName)) ?? "";
                         return Run(args: args, passedValues: passedValues, globalContext: globalContext,
-                                   writtenMasterFiles: locallyWrittenFiles, logCommands: logCommands);
+                                   writtenMasterFiles: locallyWrittenFiles, logCommands: logCommands,
+                                   maxNumberOfNewImplicitGraphs: maxNumberOfNewImplicitGraphs);
                     } finally {
                         writtenMasterFiles?.AddRange(collection: locallyWrittenFiles.Select(Path.GetFullPath));
                         Environment.CurrentDirectory = previousCurrentDirectory;

@@ -69,8 +69,8 @@ namespace Archichect.WebServing {
                         int runResult;
                         try {
                             Environment.CurrentDirectory = _fullFileDirectory;
-                            runResult = _program.Run(args.ToArray(), new string[0], new GlobalContext(), writtenMasterFiles,
-                                logCommands: true);
+                            runResult = _program.Run(args.ToArray(), new string[0], new GlobalContext(), 
+                                writtenMasterFiles, logCommands: true, maxNumberOfNewImplicitGraphs: 1);
                         } finally {
                             Environment.CurrentDirectory = previousCurrentDirectory;
                         }

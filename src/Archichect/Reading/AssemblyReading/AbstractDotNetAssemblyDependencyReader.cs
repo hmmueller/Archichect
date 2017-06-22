@@ -14,9 +14,11 @@ namespace Archichect.Reading.AssemblyReading {
     public enum DotNetUsage {
         _declaresfield,
         _declaresevent,
+        _declaresmethod,
         _declaresparameter,
         _declaresreturntype,
         _declaresvariable,
+        _isconstrainedby,
         _usesmember,
         //_usesmemberoftype, // requires declarations of "uses that type" rules, which opens up possibility to use ALL of that type.
         // This is not good. Rather, let the user manually add transitive dependencies via the member if this is needed!
@@ -79,6 +81,7 @@ namespace Archichect.Reading.AssemblyReading {
         public static readonly ItemType DOTNETPARAMETER = DotNetAssemblyDependencyReaderFactory.DOTNETPARAMETER;
         public static readonly ItemType DOTNETPROPERTY = DotNetAssemblyDependencyReaderFactory.DOTNETPROPERTY;
         public static readonly ItemType DOTNETTYPE = DotNetAssemblyDependencyReaderFactory.DOTNETTYPE;
+        public static readonly ItemType DOTNETGENERICPARAMETER = DotNetAssemblyDependencyReaderFactory.DOTNETTYPE;
         public static readonly ItemType DOTNETVARIABLE = DotNetAssemblyDependencyReaderFactory.DOTNETVARIABLE;
 
         protected readonly DotNetAssemblyDependencyReaderFactory ReaderFactory;

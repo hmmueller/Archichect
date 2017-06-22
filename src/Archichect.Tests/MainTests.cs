@@ -235,6 +235,9 @@ Archichect:Tests ---> **
                     -:* ---? System:*
                     Archichect.TestAssembly.** ---> Archichect.TestAssembly.**
 
+                    // Each type may declare constructors
+                    DOTNETTYPE:** -- '_declaresmethod -> '_ctor
+
                     $ DOTNETASSEMBLY ---> DOTNETASSEMBLY
                     * ---> *
                 ");
@@ -248,7 +251,8 @@ Archichect:Tests ---> **
                 TestAssemblyPath,
                 Program.ConfigureOption.Opt, typeof(CheckDeps).Name, "{", CheckDeps.DefaultRuleFileOption + "=" + d.FileName, "}",
                 Program.TransformOption.Opt, typeof(CheckDeps).Name,
-                Program.WriteDipOption.Opt, "yyy",
+                Program.WriteFileOption.Opt, typeof(RuleViolationWriter).Name, "violations.txt",
+                Program.WriteDipOption.Opt, "dependencies.txt",
             };
         }
 
@@ -291,6 +295,9 @@ Archichect:Tests ---> **
                     _B.** ---> System.**
                     _B.dir1.dir2:SomeClass ---? -:NamespacelessTestClassForArchichect::I
                     -:* ---? System:*
+
+                    // Each type may declare constructors
+                    DOTNETTYPE:** -- '_declaresmethod -> '_ctor
 
                     $ DOTNETASSEMBLY ---> DOTNETASSEMBLY
                     * ---> *");
@@ -659,7 +666,7 @@ script2.nd value1 defaultValue2 defaultValue3 defaultValue4 globalF5"));
                         Program.CreateEmptyGraphOption.Opt, "B", // AB
                         Program.CreateEmptyGraphOption.Opt, "C", // ABC
                         Program.CreateEmptyGraphOption.Opt, "D", // ABCD
-                        Program.CloneGraphOption.Opt, "E", // ABCDE
+                        Program.ReplicateGraphOption.Opt, "E", // ABCDE
                         Program.RenameGraphOption.Opt, "F", //ABCDF
                         Program.DeleteGraphOption.Opt, "A", "C", //BDF
                         Program.IncludeGraphOption.Opt, "B", // BDF

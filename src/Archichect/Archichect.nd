@@ -67,8 +67,8 @@
     // - Item.ctor(...)
 
     // The last one must only be called by implementations of the second one or constructors of classes derived from Item
-    ** ---> :Item:.ctor {
-         :DefaultItemAndDependencyFactory:CreateItem ---> :Item:.ctor 
+    ** --'_usesmember-> :Item:.ctor {
+         :DefaultItemAndDependencyFactory:CreateItem ---> :Item:.ctor
          :DipReader/ItemProxy:.ctor ---> :Item:.ctor
          // TBD generally, all constructors of classes derived from Item
          // TBD DefaultItemAndDependencyFactory-derived:CreateNew ---> :Item:.ctor 

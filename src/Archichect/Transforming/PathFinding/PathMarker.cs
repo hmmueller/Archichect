@@ -185,6 +185,18 @@ namespace Archichect.Transforming.PathFinding {
                 }
                 return upSum;
             }
+
+            protected override bool IsDependencyMatch(DependencyMatch dependencyMatch, Dependency dependency) {
+                return dependencyMatch.IsMatch(dependency);
+            }
+
+            protected override bool IsItemMatch(ItemMatch itemMatch, Item item) {
+                return ItemMatch.IsMatch(itemMatch, item);
+            }
+
+            protected override Item GetUsedItem(Dependency dependency) {
+                return dependency.UsedItem;
+            }
         }
 
         public static readonly Option AddMarkerOption = new Option("am", "add-marker", "&",

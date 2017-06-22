@@ -189,8 +189,9 @@ namespace Archichect {
         /// <param name="excludes"></param>
         /// <param name="assemblyName"></param>
         /// <param name="readerFactoryClassNameOrNull">if null, detect from reader class from first extension in patterns</param>
+        /// <param name="maxNumberOfNewImplicitGraphs"></param>
         public void ReadFiles(IEnumerable<string> includes, IEnumerable<string> excludes, string assemblyName,
-                             [CanBeNull] string readerFactoryClassNameOrNull) {
+                             [CanBeNull] string readerFactoryClassNameOrNull, ref int maxNumberOfNewImplicitGraphs) {
             IReaderFactory readerFactory;
             if (readerFactoryClassNameOrNull == null) {
                 IEnumerable<string> allFileNames = includes.Concat(excludes);
@@ -237,9 +238,10 @@ namespace Archichect {
 
                 readSet.AddRange(dependencies);
             }
-            if (_autoGraphsForRead > 0) {
+            if (maxNumberOfNewImplicitGraphs > 0 && _autoGraphsForRead > 0) {
                 CreateWorkingGraph(readerFactory.GetType().Name, GraphCreationType.AutoRead, readSet);
                 RemoveSuperfluousGraphs(_autoGraphsForRead, GraphCreationType.AutoRead);
+                maxNumberOfNewImplicitGraphs--;
             } else {
                 CurrentGraph.AddDependencies(readSet);
             }
@@ -314,7 +316,7 @@ namespace Archichect {
         }
 
         public int Transform([CanBeNull] string assemblyName, [NotNull] string transformerClass,
-            [CanBeNull] string transformerOptions) {
+            [CanBeNull] string transformerOptions, ref int maxNumberOfNewImplicitGraphs) {
             if (Option.IsHelpOption(transformerOptions)) {
                 ShowDetailedHelp<ITransformer>(assemblyName, transformerClass, "");
                 return Program.OPTIONS_PROBLEM;
@@ -327,9 +329,10 @@ namespace Archichect {
 
                     var workingGraphsAtStartOfTransform = new List<WorkingGraph>(_workingGraphs);
 
-                    if (_autoGraphsForTransform > 0) {
+                    if (maxNumberOfNewImplicitGraphs > 0 && _autoGraphsForTransform > 0) {
                         CreateWorkingGraph(CurrentGraph.StickyId + "->" + transformerClass, GraphCreationType.AutoTransform, Clone(CurrentGraph.VisibleDependencies));
                         RemoveSuperfluousGraphs(_autoGraphsForTransform, GraphCreationType.AutoTransform);
+                        maxNumberOfNewImplicitGraphs--;
                     }
 
                     var newDependenciesCollector = new List<Dependency>();
@@ -726,6 +729,14 @@ namespace Archichect {
         public void ListItemAndDependencyFactories() {
             Log.WriteInfo(CurrentGraph.ListItemAndDependencyFactories() ??
                           _itemAndDependencyFactories.ListItemAndDependencyFactories());
+        }
+
+        public void ShowAllTypes(string filter) {
+            foreach (var s in ItemType.AllRegisteredTypes()
+                                .Select(t => t.ToString())
+                                .Where(s => s.IndexOf(filter ?? "", StringComparison.InvariantCultureIgnoreCase) >= 0)) {
+                Log.WriteInfo(s);
+            }
         }
     }
 }

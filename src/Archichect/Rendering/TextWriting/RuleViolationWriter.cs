@@ -43,26 +43,21 @@ namespace Archichect.Rendering.TextWriting {
             }
             if (target.IsConsoleOut) {
                 var consoleLogger = new ConsoleLogger();
-                foreach (var d in dependencies.Where(d => d.QuestionableCt > 0 && d.BadCt == 0)) {
-                    consoleLogger.WriteViolation(d, options.SimpleRuleOutput);
-                }
-                foreach (var d in dependencies.Where(d => d.BadCt > 0)) {
+                foreach (var d in GetQuestionableAndBadDependencies(dependencies)) {
                     consoleLogger.WriteViolation(d, options.SimpleRuleOutput);
                 }
             } else if (options.XmlOutput) {
                 var document = new XDocument(
                 new XElement("Violations",
-                    from dependency in dependencies where dependency.NotOkCt > 0
-                    select new XElement(
-                        "Violation",
-                        new XElement("Type", dependency.BadCt > 0 ? "Bad" : "Questionable"),
-                        new XElement("UsingItem", dependency.UsingItemAsString), // NACH VORN GELEGT - OK? (wir haben kein XSD :-) )
-                                                                                 //new XElement("UsingNamespace", violation.Dependency.UsingNamespace),
-                        new XElement("UsedItem", dependency.UsedItemAsString),
-                        //new XElement("UsedNamespace", violation.Dependency.UsedNamespace),
-                        new XElement("FileName", dependency.Source)
-                        ))
-                    );
+                    GetQuestionableAndBadDependencies(dependencies).Select(dependency =>
+                        new XElement("Violation",
+                            new XElement("Type", dependency.BadCt > 0 ? "Bad" : "Questionable"),
+                            new XElement("UsingItem", dependency.UsingItemAsString),
+                            // NACH VORN GELEGT - OK? (wir haben kein XSD :-) )
+                            //new XElement("UsingNamespace", violation.Dependency.UsingNamespace),
+                            new XElement("UsedItem", dependency.UsedItemAsString),
+                            //new XElement("UsedNamespace", violation.Dependency.UsedNamespace),
+                            new XElement("FileName", dependency.Source)))));
                 var settings = new XmlWriterSettings { Encoding = Encoding.UTF8, Indent = true };
                 WriteTarget writeTarget = GetXmlFile(target);
                 Log.WriteInfo($"Writing {message} to {writeTarget}");
@@ -76,6 +71,11 @@ namespace Archichect.Rendering.TextWriting {
                     RenderToTextWriter(dependencies, sw, options.SimpleRuleOutput, options.NewLine);
                 }
             }
+        }
+
+        private static IEnumerable<Dependency> GetQuestionableAndBadDependencies(IEnumerable<Dependency> dependencies) {
+            return dependencies.Where(dependency => dependency.BadCt == 0 && dependency.QuestionableCt > 0)
+                .Concat(dependencies.Where(dependency => dependency.BadCt > 0));
         }
 
         private static WriteTarget GetTextFile(WriteTarget target) {
@@ -106,7 +106,7 @@ namespace Archichect.Rendering.TextWriting {
 
         private static void RenderToTextWriter([NotNull, ItemNotNull] IEnumerable<Dependency> dependencies, ITargetWriter sw, bool simpleRuleOutput, bool newLine) {
             sw.WriteLine($"// Written {DateTime.Now} by {typeof(RuleViolationWriter).Name} in Archichect {Program.VERSION}");
-            foreach (var d in dependencies.Where(d => d.NotOkCt > 0)) {
+            foreach (var d in GetQuestionableAndBadDependencies(dependencies)) {
                 sw.WriteLine(d.NotOkMessage(simpleRuleOutput: simpleRuleOutput, newLine: newLine));
             }
         }

@@ -9,7 +9,8 @@ using Archichect.Markers;
 using Archichect.Matching;
 
 namespace Archichect {
-    public abstract class AbstractDependency<TItem> : IWithMarkerSet, IWithCt, IMatchableObject where TItem : AbstractItem<TItem> {
+    public abstract class AbstractDependency<TItem> : IWithMarkerSet, IWithCt, IMatchableObject
+        where TItem : AbstractItem<TItem> {
         protected AbstractDependency([NotNull] TItem usingItem, [NotNull] TItem usedItem, ISourceLocation source) {
             UsingItem = usingItem;
             UsedItem = usedItem;

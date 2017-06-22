@@ -70,6 +70,12 @@ namespace Archichect.Tests {
             protected override PathStateElement<Dependency> CreateStateElement(IBeforeDependencyGraphkenState<Item, Dependency, ItemMatch, DependencyMatch> beforeNextDependencyState, Dependency nextDep) {
                 return new PathStateElement<Dependency>(beforeNextDependencyState, nextDep);
             }
+
+            protected override bool IsDependencyMatch(DependencyMatch dependencyMatch, Dependency dependency) => dependencyMatch.IsMatch(dependency);
+
+            protected override bool IsItemMatch(ItemMatch itemMatch, Item item) => ItemMatch.IsMatch(itemMatch, item);            
+
+            protected override Item GetUsedItem(Dependency dependency) => dependency.UsedItem;
         }
 
         [TestMethod]

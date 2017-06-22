@@ -79,6 +79,10 @@ namespace Archichect {
             IgnoreCase = ignoreCase;
         }
 
+        public static IEnumerable<ItemType> AllRegisteredTypes() {
+            return _allTypes.Values.Where(t => !t._matchesOnFieldNr).OrderBy(t => t.Name);
+        }
+
         public static ItemType Find([NotNull] string name) {
             ItemType result;
             _allTypes.TryGetValue(name, out result);

@@ -21,7 +21,8 @@ namespace Archichect.PathMatching {
         }
     }
 
-    public class PathStateElement<TDependency> {
+    public class PathStateElement<TDependency>
+        where TDependency : class {
         [NotNull]
         private readonly IBeforeDependencyGraphkenState _graphkenState;
         [NotNull]
@@ -43,8 +44,8 @@ namespace Archichect.PathMatching {
     }
 
     public abstract class AbstractRegexDepthFirstPathTraverser<TDependency, TItem, TDownInfo, THereInfo, TUpInfo, TPathState>
-            where TDependency : AbstractDependency<TItem>
-            where TItem : AbstractItem<TItem> {
+            where TDependency : class
+            where TItem : class {
 
         protected struct DownAndHere {
             public readonly TDownInfo Down;
@@ -93,7 +94,7 @@ namespace Archichect.PathMatching {
                 Func<TItem,bool,TDownInfo> down) {
             IBeforeItemGraphkenState<TItem, TDependency, ItemMatch, DependencyMatch> initState = _regex.CreateState();
             bool atEnd, atCount;
-            IBeforeDependencyGraphkenState<TItem, TDependency, ItemMatch, DependencyMatch> beforeDependencyState = initState.Advance(root, (m, i) => ItemMatch.IsMatch(m, i), out atEnd, out atCount);
+            IBeforeDependencyGraphkenState<TItem, TDependency, ItemMatch, DependencyMatch> beforeDependencyState = initState.Advance(root, IsItemMatch, out atEnd, out atCount);
             if (beforeDependencyState.CanContinue) {
                 return Traverse(root, incidentDependencies, beforeDependencyState, down(root, atCount),
                     new HashSet<TPathState> { CreateFirstStateElement(beforeDependencyState, root) });
@@ -122,13 +123,13 @@ namespace Archichect.PathMatching {
                 foreach (var nextDep in dependencies) {
                     bool dependencyIsCounted;
                     IBeforeItemGraphkenState<TItem, TDependency, ItemMatch, DependencyMatch> beforeItemState =
-                        beforeDependencyState.Advance(nextDep, (m, d) => m.IsMatch(d), out dependencyIsCounted);
+                        beforeDependencyState.Advance(nextDep, IsDependencyMatch, out dependencyIsCounted);
                     if (beforeItemState.CanContinue) {
-                        TItem nextTail = nextDep.UsedItem;
+                        TItem nextTail = GetUsedItem(nextDep);
                         bool atEnd;
                         bool itemIsCounted;
                         IBeforeDependencyGraphkenState<TItem, TDependency, ItemMatch, DependencyMatch> beforeNextDependencyState =
-                            beforeItemState.Advance(nextTail, (m, i) => ItemMatch.IsMatch(m, i), out atEnd, out itemIsCounted);
+                            beforeItemState.Advance(nextTail, IsItemMatch, out atEnd, out itemIsCounted);
 
                         _currentPath.Push(nextDep);
 
@@ -162,5 +163,11 @@ namespace Archichect.PathMatching {
 
             return upSum;
         }
+
+        protected abstract bool IsDependencyMatch(DependencyMatch dependencyMatch, TDependency dependency);
+
+        protected abstract bool IsItemMatch(ItemMatch itemMatch, TItem item);
+
+        protected abstract TItem GetUsedItem(TDependency dependency);
     }
 }
