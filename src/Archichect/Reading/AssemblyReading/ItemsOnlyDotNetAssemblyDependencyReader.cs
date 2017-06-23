@@ -93,9 +93,5 @@ namespace Archichect.Reading.AssemblyReading {
                 namespaceName, className, assemblyName, assemblyVersion, assemblyCulture, memberName, markers, 
                 customSections, readingGraph: readingGraph);
         }
-
-        public override void SetReadersInSameReadFilesBeforeReadDependencies(IDependencyReader[] readerGang) {
-            // empty
-        }
     }
 }

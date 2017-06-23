@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Archichect.Reading.DipReading;
 using JetBrains.Annotations;
 
 namespace Archichect.Reading {
@@ -20,7 +21,5 @@ namespace Archichect.Reading {
 
         [NotNull]
         public abstract IEnumerable<Dependency> ReadDependencies(WorkingGraph readingGraph, int depth, bool ignoreCase);
-
-        public abstract void SetReadersInSameReadFilesBeforeReadDependencies([NotNull] IDependencyReader[] readerGang);
     }
 }

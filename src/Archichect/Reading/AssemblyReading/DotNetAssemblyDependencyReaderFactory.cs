@@ -5,11 +5,11 @@ using Mono.Cecil;
 
 namespace Archichect.Reading.AssemblyReading {
     public class DotNetAssemblyDependencyReaderFactory : AbstractReaderFactory {
-        public class ReadingContext : IReadingContext {
+        public class ReadingContext : AbstractReadingContext {
             public int ExceptionCount;
             public readonly HashSet<string> UnresolvableAssemblies = new HashSet<string>();
 
-            public void AfterReading() {
+            public override void Finish() {
                 if (Log.IsDebugEnabled) {
                     Log.WriteDebug($"{ExceptionCount} exceptions were thrown during reading");
                 }
@@ -43,8 +43,6 @@ namespace Archichect.Reading.AssemblyReading {
 
         private static readonly string[] _supportedFileExtensions = { ".dll", ".exe" };
 
-
-
         [UsedImplicitly]
         public DotNetAssemblyDependencyReaderFactory() {
             ItemType.ForceLoadingPredefinedType(DOTNETASSEMBLY);
@@ -58,7 +56,7 @@ namespace Archichect.Reading.AssemblyReading {
             ItemType.ForceLoadingPredefinedType(DOTNETTYPE);
         }
 
-        public override IDependencyReader CreateReader(string fileName, bool needsOnlyItemTails, IReadingContext readingContext) {
+        public override IDependencyReader CreateReader(string fileName, bool needsOnlyItemTails, AbstractReadingContext readingContext) {
             return needsOnlyItemTails
                 ? (AbstractDependencyReader)new ItemsOnlyDotNetAssemblyDependencyReader(this, fileName, (ReadingContext)readingContext)
                 : new FullDotNetAssemblyDependencyReader(this, fileName, (ReadingContext)readingContext);
@@ -162,7 +160,7 @@ _usestype             all -> TYPE
 
         public override IEnumerable<string> SupportedFileExtensions => _supportedFileExtensions;
 
-        public override IReadingContext CreateReadingContext() {
+        public override AbstractReadingContext CreateReadingContext() {
             return new ReadingContext();
         }
     }

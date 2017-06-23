@@ -22,7 +22,7 @@ namespace Archichect.Tests {
             }));
 
             var gc = new GlobalContext();
-            IEnumerable<Dependency> result = new DipReaderFactory().CreateReader(outFile, false, null)
+            IEnumerable<Dependency> result = new DipReaderFactory().CreateReader(outFile, false, new DipReaderFactory.ReadingContext())
                                                                    .ReadDependencies(gc.CurrentGraph, 0, ignoreCase: false);
             Assert.IsNotNull(result);
 
@@ -45,7 +45,7 @@ namespace Archichect.Tests {
             }));
 
             var gc = new GlobalContext();
-            IEnumerable<Dependency> result = new DipReaderFactory().CreateReader(outFile, false, null)
+            IEnumerable<Dependency> result = new DipReaderFactory().CreateReader(outFile, false, new DipReaderFactory.ReadingContext())
                                                                    .ReadDependencies(gc.CurrentGraph, 0, ignoreCase: false);
             Assert.IsNotNull(result);
 

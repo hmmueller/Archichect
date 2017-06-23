@@ -1,9 +1,17 @@
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace Archichect.Reading.DipReading {
     public class DipReaderFactory : AbstractReaderFactory {
-        public override IDependencyReader CreateReader(string fileName, bool needsOnlyItemTails, IReadingContext readingContext) {
-            return new DipReader(fileName);
+        public class ReadingContext : AbstractReadingContext {
+            public override void Finish() {
+                // empty
+            }
+        }
+
+        public override IDependencyReader CreateReader([NotNull] string fileName, bool needsOnlyItemTails, 
+            [NotNull] AbstractReadingContext readingContext) {
+            return new DipReader(fileName, (ReadingContext) readingContext);
         }
 
         private static readonly string[] _supportedFileExtensions = { ".dip" };
@@ -25,8 +33,8 @@ ___EXPLANATION MISSING___";
             return result;
         }
 
-        public override IReadingContext CreateReadingContext() {
-            return null;
+        public override AbstractReadingContext CreateReadingContext() {
+            return new ReadingContext();
         }
     }
 }

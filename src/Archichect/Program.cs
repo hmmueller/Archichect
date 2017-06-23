@@ -14,7 +14,7 @@ using Archichect.WebServing;
 
 namespace Archichect {
     public class Program {
-        public const string VERSION = "V.0.39.4";
+        public const string VERSION = "V.0.39.5";
 
         public const int OK_RESULT = 0;
         public const int OPTIONS_PROBLEM = 180;

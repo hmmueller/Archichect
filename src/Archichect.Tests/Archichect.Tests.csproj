@@ -69,6 +69,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Class1.cs" />
     <Compile Include="EnumerableComparer.cs" />
     <Compile Include="FileHandlingTests.cs" />
     <Compile Include="AttributeTests.cs" />

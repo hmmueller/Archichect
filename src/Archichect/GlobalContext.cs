@@ -83,7 +83,7 @@ namespace Archichect {
         public static string ExpandHexChars([CanBeNull] string s) {
             return s != null && s.Contains('%')
                 ? Regex.Replace(s, "%[0-9a-fA-F][0-9a-fA-F]",
-                    m => "" + (char) int.Parse(m.Value.Substring(1), NumberStyles.HexNumber))
+                    m => "" + (char)int.Parse(m.Value.Substring(1), NumberStyles.HexNumber))
                 : s;
         }
 
@@ -106,9 +106,9 @@ namespace Archichect {
             }
             try {
                 // Plugins can have state, therefore we must manage them in a repository. A simple list is sufficient.
-                T result = (T) _plugins.FirstOrDefault(t => t.GetType() == pluginType);
+                T result = (T)_plugins.FirstOrDefault(t => t.GetType() == pluginType);
                 if (result == null) {
-                    _plugins.Add(result = (T) Activator.CreateInstance(pluginType));
+                    _plugins.Add(result = (T)Activator.CreateInstance(pluginType));
                 }
                 return result;
             } catch (Exception ex) {
@@ -143,7 +143,7 @@ namespace Archichect {
         private IEnumerable<T> CreatePlugins<T>(string assemblyName) where T : class, IPlugin {
             return GetPluginTypes<T>(assemblyName).Select(t => {
                 try {
-                    return (T) Activator.CreateInstance(t);
+                    return (T)Activator.CreateInstance(t);
                 } catch (Exception ex) {
                     Log.WriteError($"Cannot get help for renderer '{t.FullName}'; reason: {ex.Message}");
                     return null;
@@ -223,33 +223,31 @@ namespace Archichect {
                 }
             }
 
-            IReadingContext readingContext = readerFactory.CreateReadingContext();
+            AbstractReadingContext readingContext = readerFactory.CreateReadingContext();
             IDependencyReader[] readers = fileNames
                 .Select(fileName => readerFactory.CreateReader(fileName, needsOnlyItemTails: false/*???*/, readingContext: readingContext))
                 .ToArray();
-
-            foreach (var r in readers) {
-                r.SetReadersInSameReadFilesBeforeReadDependencies(readers);
-            }
+            readingContext.SetReaderGang(readers);
 
             // Currently, we add the previous set of dependencies to the newly read ones; with the introduction of a useful "working set" concept, this should vanish ...
             var readSet = new List<Dependency>();
-            var timer = new Stopwatch();
-            timer.Start();
             foreach (var r in readers) {
-                var localTimer = new Stopwatch();
-                localTimer.Start();
+                readingContext.StartStep();
+
                 Dependency[] dependencies = r.ReadDependencies(CurrentGraph, 0, IgnoreCase).ToArray();
+
                 if (!dependencies.Any()) {
                     Log.WriteWarning("No dependencies found in " + r.FullFileName);
                 }
                 if (Log.IsChattyEnabled) {
-                    Log.WriteDebug($"{r.FullFileName}: {dependencies.Length} dependencies read in {localTimer.ElapsedMilliseconds} ms; average={dependencies.Length/ localTimer.Elapsed.TotalSeconds:F2} deps/s");
+                    LogSpeed(r.FullFileName + " and dependent files: ", readingContext.StepReadCount, readingContext.StepTime);
                 }
+                readingContext.FinishStep();
+
                 readSet.AddRange(dependencies);
             }
             if (Log.IsVerboseEnabled) {
-                Log.WriteDebug($"{readSet.Count} dependencies read in {timer.ElapsedMilliseconds} ms; average={readSet.Count/timer.Elapsed.TotalSeconds:F2} deps/s");
+                LogSpeed("", readingContext.ReadCount, readingContext.FullTime);
             }
             if (maxNumberOfNewImplicitGraphs > 0 && _autoGraphsForRead > 0) {
                 CreateWorkingGraph(readerFactory.GetType().Name, GraphCreationType.AutoRead, readSet);
@@ -258,9 +256,16 @@ namespace Archichect {
             } else {
                 CurrentGraph.AddDependencies(readSet);
             }
-            readingContext?.AfterReading();
+            readingContext.Finish();
 
             LogDependencyCount();
+        }
+
+        private static void LogSpeed(string prefix, int readCount, TimeSpan readTime) {
+            if (readCount > 0) {
+                Log.WriteDebug(
+                    $"{prefix}{readCount} dependencies read in {readTime.TotalSeconds:F2} s; average={readCount / readTime.TotalSeconds:F2} deps/s");
+            }
         }
 
         private void LogDependencyCount() {
@@ -350,7 +355,7 @@ namespace Archichect {
                     }
 
                     var newDependenciesCollector = new List<Dependency>();
-                    int result = transformer.Transform(this, CurrentGraph.VisibleDependencies, transformerOptions, newDependenciesCollector, 
+                    int result = transformer.Transform(this, CurrentGraph.VisibleDependencies, transformerOptions, newDependenciesCollector,
                                                        s => FindDependenciesInFirstGraphMatchingName(s, workingGraphsAtStartOfTransform));
 
                     if (newDependenciesCollector.Contains(null)) {

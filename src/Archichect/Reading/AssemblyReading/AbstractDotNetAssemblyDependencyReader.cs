@@ -385,8 +385,9 @@ namespace Archichect.Reading.AssemblyReading {
 
         [CanBeNull]
         protected TypeDefinition Resolve(TypeReference typeReference) {
-            string assemblyFullName = typeReference.Module.Assembly.Name.FullName;
-            if (_readingContext.UnresolvableAssemblies.Contains(assemblyFullName)) {
+            AssemblyNameReference assemblyNameRef = typeReference.Scope as AssemblyNameReference;            
+            string assemblyFullName = assemblyNameRef?.FullName;
+            if (assemblyFullName == null || _readingContext.UnresolvableAssemblies.Contains(assemblyFullName)) {
                 return null;
             } else {
                 try {

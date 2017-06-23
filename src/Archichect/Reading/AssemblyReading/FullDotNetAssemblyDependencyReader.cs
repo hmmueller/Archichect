@@ -81,8 +81,6 @@ namespace Archichect.Reading.AssemblyReading {
 
         private static readonly string[] NO_MARKERS = new string[0];
 
-        private IDependencyReader[] _readerGang;
-
         private IEnumerable<RawDependency> _rawDependencies;
 
         public FullDotNetAssemblyDependencyReader(DotNetAssemblyDependencyReaderFactory readerFactory, string fileName, 
@@ -107,10 +105,6 @@ namespace Archichect.Reading.AssemblyReading {
                 }.Concat(ForwardToTypeDefinition((FieldDefinition p) => Resolve(p.FieldType))).ToArray();
         }
 
-        public override void SetReadersInSameReadFilesBeforeReadDependencies(IDependencyReader[] readerGang) {
-            _readerGang = readerGang;
-        }
-
         public override IEnumerable<Dependency> ReadDependencies(WorkingGraph readingGraph, int depth, bool ignoreCase) {
             return GetOrReadRawDependencies(depth, readingGraph).Where(d => d.UsedItem != null).Select(d => d.ToDependencyWithTail(readingGraph, depth, ContainerUri));
         }
@@ -118,7 +112,9 @@ namespace Archichect.Reading.AssemblyReading {
         private IEnumerable<RawDependency> GetOrReadRawDependencies(int depth, WorkingGraph readingGraph) {
             // ReSharper disable once ConvertIfStatementToNullCoalescingExpression
             if (_rawDependencies == null) {
-                _rawDependencies = ReadRawDependencies(depth, readingGraph).ToArray();
+                RawDependency[] rawDependencies = ReadRawDependencies(depth, readingGraph).ToArray();
+                _readingContext.IncCount(rawDependencies.Length);
+                _rawDependencies = rawDependencies;
             }
             return _rawDependencies;
         }
@@ -203,7 +199,7 @@ namespace Archichect.Reading.AssemblyReading {
                     NO_MARKERS, readingGraph);
 
                 yield return new RawDependency(usingItem, usedItem, DotNetUsage._usesasgenericargument, sequencePoint: null,
-                    readerForUsedItem: _readerGang.OfType<AbstractDotNetAssemblyDependencyReader>()
+                    readerForUsedItem: _readingContext.ReaderGang.OfType<AbstractDotNetAssemblyDependencyReader>()
                             .FirstOrDefault(r => r.AssemblyName == usedItem.AssemblyName));
 
                 RawUsingItem usingParameter = CreateUsingItem(DOTNETGENERICPARAMETER, genericParameter, genericParameter.Name,
@@ -268,7 +264,7 @@ namespace Archichect.Reading.AssemblyReading {
 
                 yield return
                     new RawDependency(usingItem, usedItem, DotNetUsage._declaresmethod, sequencePoint: null,
-                    readerForUsedItem: _readerGang.OfType<AbstractDotNetAssemblyDependencyReader>()
+                    readerForUsedItem: _readingContext.ReaderGang.OfType<AbstractDotNetAssemblyDependencyReader>()
                             .FirstOrDefault(r => r.AssemblyName == usedItem.AssemblyName));
 
                 RawUsingItem usingMethod = CreateUsingItem(DOTNETMETHOD, type, method.Name,
@@ -546,7 +542,7 @@ namespace Archichect.Reading.AssemblyReading {
                 RawUsedItem usedItem = CreateUsedItem(usedItemType, usedType, memberName, usedMarkers, readingGraph);
 
                 yield return new RawDependency(usingItem, usedItem, usage, sequencePoint,
-                    _readerGang.OfType<AbstractDotNetAssemblyDependencyReader>().FirstOrDefault(r => r.AssemblyName == usedItem.AssemblyName));
+                    _readingContext.ReaderGang.OfType<AbstractDotNetAssemblyDependencyReader>().FirstOrDefault(r => r.AssemblyName == usedItem.AssemblyName));
             }
 
             var genericInstanceType = usedType as GenericInstanceType;

@@ -7,6 +7,8 @@ using JetBrains.Annotations;
 
 namespace Archichect.Reading.DipReading {
     internal class DipReader : AbstractDependencyReader {
+        private readonly DipReaderFactory.ReadingContext _readingContext;
+
         private class DipReaderException : Exception {
             public DipReaderException(string msg)
                 : base(msg) {
@@ -40,7 +42,8 @@ namespace Archichect.Reading.DipReading {
 
         private readonly Dictionary<string, ItemType> _registeredItemTypes = new Dictionary<string, ItemType>();
 
-        public DipReader([NotNull] string fileName) : base(Path.GetFullPath(fileName), fileName) {
+        public DipReader([NotNull] string fileName, DipReaderFactory.ReadingContext readingContext) : base(Path.GetFullPath(fileName), fileName) {
+            _readingContext = readingContext;
         }
 
         public override IEnumerable<Dependency> ReadDependencies(WorkingGraph readingGraph, int depth, bool ignoreCase) {
@@ -112,6 +115,8 @@ namespace Archichect.Reading.DipReading {
                 }
 
                 Log.WriteInfo($"... read {result.Count} dependencies from {FullFileName}");
+                _readingContext.IncCount(result.Count);
+
                 if (thereAreProxies) {
                     var proxies = new HashSet<ItemProxy>(itemsDictionary.Keys.OfType<ItemProxy>());
                     Item[] items = itemsDictionary.Keys.Where(i => !(i is ItemProxy)).ToArray();
@@ -172,10 +177,6 @@ namespace Archichect.Reading.DipReading {
 
         private static void WriteError(string fileName, int lineNo, string msg, string line) {
             Log.WriteError(fileName + "/" + lineNo + ": " + msg + " - '" + line + "'");
-        }
-
-        public override void SetReadersInSameReadFilesBeforeReadDependencies(IDependencyReader[] readerGang) {
-            // empty - we do not need knowledge about neighboring readers
         }
     }
 }
