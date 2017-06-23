@@ -61,7 +61,7 @@ namespace Archichect.Transforming.Projecting {
             }
 
             private void DumpProjectorsForDebugging() {
-                if (Log.IsChattyEnabled) {
+                if (Log.IsDebugEnabled) {
                     Log.WriteDebug("--------- ProjectItems.DumpProjectorsForDebugging ---------");
                     foreach (var p in _projectors) {
                         p.DumpForDebugging();

@@ -248,7 +248,7 @@ namespace Archichect {
                 }
                 readSet.AddRange(dependencies);
             }
-            if (Log.IsChattyEnabled) {
+            if (Log.IsVerboseEnabled) {
                 Log.WriteDebug($"{readSet.Count} dependencies read in {timer.ElapsedMilliseconds} ms; average={readSet.Count/timer.Elapsed.TotalSeconds:F2} deps/s");
             }
             if (maxNumberOfNewImplicitGraphs > 0 && _autoGraphsForRead > 0) {
