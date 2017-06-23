@@ -17,8 +17,9 @@ namespace Archichect.Matching {
             }
 
             public IMatcher[] Matchers { get; }
+
             public MatchResult Matches(bool invert, ItemType itemType, ItemSegment item, string[] references) {
-                string[] groupsInItem = NO_GROUPS;
+                List<string> groupsInItem = null;
 
                 for (int i = 0; i < Matchers.Length; i++) {
                     IMatcher matcher = Matchers[i];
@@ -27,18 +28,14 @@ namespace Archichect.Matching {
                     if (groups == null) {
                         return new MatchResult(invert, null);
                     }
-                    int ct = groups.Count();
-                    if (ct > 0) {
-                        var newGroupsInItem = new string[groupsInItem.Length + ct];
-                        Array.Copy(groupsInItem, newGroupsInItem, groupsInItem.Length);
-                        int j = groupsInItem.Length;
-                        foreach (var g in groups) {
-                            newGroupsInItem[j++] = g;
+                    if (groups.Any()) {
+                        if (groupsInItem == null) {
+                            groupsInItem = new List<string>(4);
                         }
-                        groupsInItem = newGroupsInItem;
+                        groupsInItem.AddRange(groups);
                     }
                 }
-                return new MatchResult(!invert, groupsInItem);
+                return new MatchResult(!invert, groupsInItem?.ToArray());
             }
         }
 

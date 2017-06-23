@@ -10,6 +10,7 @@ namespace Archichect.Transforming.Projecting {
             double CostPerProjection { get; }
 
             void ReduceCostCountsInReorganizeToForgetHistory();
+            void DumpForDebugging();
         }
 
         public abstract class AbstractSelfOptimizingProjector<TResortableProjectorWithCost> : AbstractProjector
@@ -37,6 +38,8 @@ namespace Archichect.Transforming.Projecting {
                 // ReSharper disable once VirtualMemberCallInConstructor 
                 _projectors = CreateResortableProjectors(orderedProjections);
 
+                DumpProjectorsForDebugging();
+
                 _fallBackProjector = new SimpleProjector(orderedProjections, name: "fallback");
                 _timer.Start();
             }
@@ -53,6 +56,16 @@ namespace Archichect.Transforming.Projecting {
                 _projectors.Sort();
                 foreach (var p in _projectors) {
                     p.ReduceCostCountsInReorganizeToForgetHistory();
+                }
+                DumpProjectorsForDebugging();
+            }
+
+            private void DumpProjectorsForDebugging() {
+                if (Log.IsChattyEnabled) {
+                    Log.WriteDebug("--------- ProjectItems.DumpProjectorsForDebugging ---------");
+                    foreach (var p in _projectors) {
+                        p.DumpForDebugging();
+                    }
                 }
             }
 

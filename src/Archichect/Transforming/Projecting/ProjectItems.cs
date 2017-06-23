@@ -115,10 +115,10 @@ Examples:
                             _createProjector = (p, i) => new SimpleProjector(p, name: "default projector");
                             break;
                         case "PT":
-                            _createProjector = (p, i) => new SelfOptimizingPrefixTrieProjector(p, i, 1000, name: "PT projector");
+                            _createProjector = (p, i) => new SelfOptimizingPrefixTrieProjector(p, i, 30000, name: "PT projector");
                             break;
                         case "FL":
-                            _createProjector = (p, i) => new SelfOptimizingFirstLetterProjector(p, i, 1000, name: "FL projector");
+                            _createProjector = (p, i) => new SelfOptimizingFirstLetterProjector(p, i, 10000, name: "FL projector");
                             break;
                         default:
                             Log.WriteWarning($"Unrecognized matcher optimization strategy {strategy} - using default");

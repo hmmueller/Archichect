@@ -57,6 +57,10 @@ namespace Archichect.Transforming.Projecting {
             ItemMatch = new ItemMatch(sourceItemTypeOrNull, pattern, 0, ignoreCase, anyWhereMatcherOk: false);
         }
 
+        public override string ToString() {
+            return ItemMatch.Representation;
+        }
+
         /// <summary>
         /// Return projected string for some item.
         /// </summary>

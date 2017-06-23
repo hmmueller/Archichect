@@ -25,8 +25,13 @@ namespace Archichect {
                 throw new ArgumentNullException(nameof(type));
             }
             _type = type;
+            for (int i = 0; i < values.Length; i++) {
+                if (values[i] != null && values[i].Length < 50) {
+                    values[i] = string.Intern(values[i]);
+                }
+            }
             IEnumerable<string> enoughValues = values.Length < type.Length ? values.Concat(Enumerable.Range(0, type.Length - values.Length).Select(i => "")) : values;
-            Values = enoughValues.Select(v => v == null ? null : string.Intern(v)).ToArray();
+            Values = values == enoughValues ? values : enoughValues.ToArray();
             CasedValues = type.IgnoreCase ? enoughValues.Select(v => v.ToUpperInvariant()).ToArray() : Values;
 
             int h = _type.GetHashCode();
@@ -68,10 +73,10 @@ namespace Archichect {
     }
 
     public sealed class ItemTail : ItemSegment {
-        private ItemTail([NotNull]ItemType type, [NotNull]string[] values) : base(type, values) {
+        private ItemTail([NotNull]ItemType type, [NotNull, ItemNotNull] string[] values) : base(type, values) {
         }
 
-        public static ItemTail New(Intern<ItemTail> cache, [NotNull] ItemType type, [NotNull] string[] values) {
+        public static ItemTail New(Intern<ItemTail> cache, [NotNull] ItemType type, [NotNull, ItemNotNull] string[] values) {
             return cache.GetReference(new ItemTail(type, values));
         }
 

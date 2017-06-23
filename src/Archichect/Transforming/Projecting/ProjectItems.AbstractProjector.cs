@@ -62,6 +62,13 @@ namespace Archichect.Transforming.Projecting {
             public override Item Project(WorkingGraph cachingGraph, Item item, bool left, int dependencyProjectCountForLogging) {
                 return ProjectBySequentialSearch(cachingGraph, item, left, dependencyProjectCountForLogging);
             }
+
+            public void DumpForDebugging(string indent) {
+                Log.WriteDebug(indent + " " + Name + " " + GetType().Name);
+                foreach (var p in _orderedProjections) {
+                    Log.WriteDebug(indent + "  --> " + p);
+                }
+            }
         }
     }
 }
