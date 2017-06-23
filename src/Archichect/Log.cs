@@ -12,7 +12,7 @@ namespace Archichect {
             _level = level;
         }
 
-        public static bool IsDebugEnabled => _level >= Level.Chatty;
+        public static bool IsDebugEnabled => _level >= Level.Debug;
 
         public static bool IsChattyEnabled => _level >= Level.Chatty;
 
