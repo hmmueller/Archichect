@@ -56,23 +56,23 @@ namespace Archichect.Transforming.Projecting {
             }
 
             [NotNull]
-            public SimpleProjector SelectProjector(string triePath) {
-                if (triePath == "") {
+            public SimpleProjector SelectProjector(string triePath, int pos) {
+                if (pos >= triePath.Length) {
                     return _projectorToUseIfNoCharMatches;
                 } else {
-                    char c = triePath[0];
+                    char c = triePath[pos];
                     TrieNode childNode;
                     return _children.TryGetValue(c, out childNode)
-                        ? childNode.SelectProjector(triePath.Substring(1))
+                        ? childNode.SelectProjector(triePath, pos + 1)
                         : _projectorToUseIfNoCharMatches;
                 }
             }
 
-            public double GetMatchCount() {
+            public int GetMatchCount() {
                 return _children.Values.Sum(c => c.GetMatchCount()) + _projectorToUseIfNoCharMatches.MatchCount;
             }
 
-            public double GetProjectCount() {
+            public int GetProjectCount() {
                 return _children.Values.Sum(c => c.GetProjectCount()) + _projectorToUseIfNoCharMatches.ProjectCount;
             }
 
@@ -103,9 +103,14 @@ namespace Archichect.Transforming.Projecting {
                 _fieldPos = fieldPos;
             }
 
-            public override Item Project(WorkingGraph cachingGraph, Item item, bool left) {
-                return _root.SelectProjector(item.Values.ElementAtOrDefault(_fieldPos)).Project(cachingGraph, item, left);
+            public override Item Project(WorkingGraph cachingGraph, Item item, bool left, int dependencyProjectCountForLogging) {
+                return _root.SelectProjector(item.Values.ElementAtOrDefault(_fieldPos), 0)
+                            .Project(cachingGraph, item, left, dependencyProjectCountForLogging);
             }
+
+            public override int ProjectCount => _root.GetProjectCount();
+
+            public override int MatchCount => _root.GetMatchCount();
 
             public double CostPerProjection => (_root.GetMatchCount() + 1e-3) / (_root.GetProjectCount() + 1e-9);
 

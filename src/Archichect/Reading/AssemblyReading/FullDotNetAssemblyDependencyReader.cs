@@ -85,8 +85,9 @@ namespace Archichect.Reading.AssemblyReading {
 
         private IEnumerable<RawDependency> _rawDependencies;
 
-        public FullDotNetAssemblyDependencyReader(DotNetAssemblyDependencyReaderFactory readerFactory, string fileName)
-            : base(readerFactory, fileName) {
+        public FullDotNetAssemblyDependencyReader(DotNetAssemblyDependencyReaderFactory readerFactory, string fileName, 
+                DotNetAssemblyDependencyReaderFactory.ReadingContext readingContext)
+            : base(readerFactory, fileName, readingContext) {
             _propertyDefinitionMarkers = new[] {
                     CreateCheck<PropertyDefinition>(t => t.IsDefinition, _definition),
                     // and maybe more, from other Mono.Cecil information
@@ -139,6 +140,7 @@ namespace Archichect.Reading.AssemblyReading {
             try {
                 assembly.MainModule.ReadSymbols();
             } catch (Exception ex) {
+                _readingContext.ExceptionCount++;
                 Log.WriteWarning($"Loading symbols for assembly {FullFileName} failed - maybe .PDB file is missing. ({ex.Message})", FullFileName, 0);
             }
 

@@ -19,11 +19,12 @@ namespace Archichect.Transforming.Projecting {
 
             public string Name { get; }
 
-            public abstract Item Project(WorkingGraph cachingGraph, Item item, bool left);
+            public abstract Item Project(WorkingGraph cachingGraph, Item item, bool left, int dependencyProjectCountForLogging);
+            public abstract int ProjectCount { get; }
+            public abstract int MatchCount { get; }
         }
 
         public abstract class AbstractProjectorWithProjectionList : AbstractProjector {
-
             protected readonly Projection[] _orderedProjections;
             private int _projectCount;
             private int _matchCount;
@@ -32,11 +33,11 @@ namespace Archichect.Transforming.Projecting {
                 _orderedProjections = orderedProjections;
             }
 
-            public int ProjectCount => _projectCount;
+            public override int ProjectCount => _projectCount;
 
-            public int MatchCount => _matchCount;
+            public override int MatchCount => _matchCount;
 
-            protected Item ProjectBySequentialSearch(WorkingGraph cachingGraph, Item item, bool left) {
+            protected Item ProjectBySequentialSearch(WorkingGraph cachingGraph, Item item, bool left, int dependencyProjectCountForLogging) {
                 _projectCount++;
                 foreach (var p in _orderedProjections) {
                     _matchCount++;
@@ -58,8 +59,8 @@ namespace Archichect.Transforming.Projecting {
             public SimpleProjector(Projection[] orderedProjections, string name) : base(orderedProjections, name) {
             }
 
-            public override Item Project(WorkingGraph cachingGraph, Item item, bool left) {
-                return ProjectBySequentialSearch(cachingGraph, item, left);
+            public override Item Project(WorkingGraph cachingGraph, Item item, bool left, int dependencyProjectCountForLogging) {
+                return ProjectBySequentialSearch(cachingGraph, item, left, dependencyProjectCountForLogging);
             }
         }
     }

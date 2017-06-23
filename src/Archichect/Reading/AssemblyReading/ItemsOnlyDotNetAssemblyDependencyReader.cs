@@ -5,8 +5,9 @@ using Mono.Cecil;
 
 namespace Archichect.Reading.AssemblyReading {
     public class ItemsOnlyDotNetAssemblyDependencyReader : AbstractDotNetAssemblyDependencyReader {
-        public ItemsOnlyDotNetAssemblyDependencyReader(DotNetAssemblyDependencyReaderFactory readerFactory, string fileName)
-            : base(readerFactory, fileName) {
+        public ItemsOnlyDotNetAssemblyDependencyReader(DotNetAssemblyDependencyReaderFactory readerFactory, 
+            string fileName, DotNetAssemblyDependencyReaderFactory.ReadingContext readingContext)
+            : base(readerFactory, fileName, readingContext) {
         }
 
         public override IEnumerable<Dependency> ReadDependencies(WorkingGraph readingGraph, int depth, bool ignoreCase) {

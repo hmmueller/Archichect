@@ -18,6 +18,8 @@ namespace Archichect {
         [NotNull]
         public readonly string[] CasedValues;
 
+        private readonly int _hash;
+
         protected ItemSegment([NotNull] ItemType type, [NotNull] string[] values) {
             if (type == null) {
                 throw new ArgumentNullException(nameof(type));
@@ -26,6 +28,13 @@ namespace Archichect {
             IEnumerable<string> enoughValues = values.Length < type.Length ? values.Concat(Enumerable.Range(0, type.Length - values.Length).Select(i => "")) : values;
             Values = enoughValues.Select(v => v == null ? null : string.Intern(v)).ToArray();
             CasedValues = type.IgnoreCase ? enoughValues.Select(v => v.ToUpperInvariant()).ToArray() : Values;
+
+            int h = _type.GetHashCode();
+
+            foreach (var t in CasedValues) {
+                h ^= (t ?? "").GetHashCode();
+            }
+            _hash = h;
         }
 
         public ItemType Type => _type;
@@ -34,13 +43,15 @@ namespace Archichect {
         protected bool EqualsSegment(ItemSegment other) {
             if (other == null) {
                 return false;
+            } else if (ReferenceEquals(other, this)) {
+                return true;
+            } else if (other._hash != _hash) {
+                return false;
+            } else if (!Type.Equals(other.Type)) {
+                return false;
+            } else if (Values.Length != other.Values.Length) {
+                return false;
             } else {
-                if (!Type.Equals(other.Type)) {
-                    return false;
-                }
-                if (Values.Length != other.Values.Length) {
-                    return false;
-                }
                 for (int i = 0; i < CasedValues.Length; i++) {
                     if (CasedValues[i] != other.CasedValues[i]) {
                         return false;
@@ -52,14 +63,8 @@ namespace Archichect {
 
         [DebuggerStepThrough]
         protected int SegmentHashCode() {
-            int h = _type.GetHashCode();
-
-            foreach (var t in CasedValues) {
-                h ^= (t ?? "").GetHashCode();
-            }
-            return h;
+            return _hash;
         }
-
     }
 
     public sealed class ItemTail : ItemSegment {
@@ -217,7 +222,7 @@ namespace Archichect {
         Item CreateItem([NotNull] ItemType type, [ItemNotNull] string[] values);
 
         Dependency CreateDependency([NotNull] Item usingItem, [NotNull] Item usedItem, [CanBeNull] ISourceLocation source,
-            [CanBeNull] IMarkerSet markers, int ct, int questionableCt = 0, int badCt = 0, string notOkReason = null, 
+            [CanBeNull] IMarkerSet markers, int ct, int questionableCt = 0, int badCt = 0, string notOkReason = null,
             [CanBeNull] string exampleInfo = null);
     }
 

@@ -14,8 +14,8 @@ namespace Archichect.Transforming.Projecting {
 
             public double CostPerProjection => (MatchCount + 1e-3) / (ProjectCount + 1e-9);
 
-            public override Item Project(WorkingGraph cachingGraph, Item item, bool left) {
-                return ProjectBySequentialSearch(cachingGraph, item, left);
+            public override Item Project(WorkingGraph cachingGraph, Item item, bool left, int dependencyProjectCountForLogging) {
+                return ProjectBySequentialSearch(cachingGraph, item, left, dependencyProjectCountForLogging);
             }
 
             public int CompareTo(IResortableProjectorWithCost other) {

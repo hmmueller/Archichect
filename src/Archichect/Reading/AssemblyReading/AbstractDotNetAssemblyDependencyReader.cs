@@ -85,6 +85,7 @@ namespace Archichect.Reading.AssemblyReading {
         public static readonly ItemType DOTNETVARIABLE = DotNetAssemblyDependencyReaderFactory.DOTNETVARIABLE;
 
         protected readonly DotNetAssemblyDependencyReaderFactory ReaderFactory;
+        protected readonly DotNetAssemblyDependencyReaderFactory.ReadingContext _readingContext;
         public readonly string Assemblyname;
 
         protected readonly Intern<RawUsingItem> _rawUsingItemsCache = new Intern<RawUsingItem>();
@@ -94,9 +95,11 @@ namespace Archichect.Reading.AssemblyReading {
 
         private Dictionary<RawUsedItem, Item> _rawItems2Items;
 
-        protected AbstractDotNetAssemblyDependencyReader(DotNetAssemblyDependencyReaderFactory readerFactory, string fileName)
+        protected AbstractDotNetAssemblyDependencyReader(DotNetAssemblyDependencyReaderFactory readerFactory, string fileName, 
+                DotNetAssemblyDependencyReaderFactory.ReadingContext readingContext)
             : base(Path.GetFullPath(fileName), Path.GetFileName(fileName)) {
             ReaderFactory = readerFactory;
+            _readingContext = readingContext;
             Assemblyname = Path.GetFileNameWithoutExtension(fileName);
         }
 
@@ -195,7 +198,7 @@ namespace Archichect.Reading.AssemblyReading {
                 _tail = tail;
             }
 
-            public static RawUsingItem New([NotNull] Intern<RawUsingItem> cache, [NotNull] ItemType itemType, 
+            public static RawUsingItem New([NotNull] Intern<RawUsingItem> cache, [NotNull] ItemType itemType,
                 [NotNull] string namespaceName, [NotNull] string className, [NotNull] string assemblyName,
                 [CanBeNull] string assemblyVersion, [CanBeNull] string assemblyCulture, [CanBeNull] string memberName,
                 [CanBeNull, ItemNotNull] string[] markers, [CanBeNull] ItemTail tail, [NotNull] WorkingGraph readingGraph) {
@@ -351,14 +354,10 @@ namespace Archichect.Reading.AssemblyReading {
             return result;
         }
 
-        private readonly ISet<string> _loggedInfos = new HashSet<string>();
-
-        private static readonly HashSet<string> _unresolvableTypeReferences = new HashSet<string>();
-
         private ItemTail ExtractCustomSections(WorkingGraph readingGraph, CustomAttribute customAttribute, ItemTail parent) {
             TypeReference customAttributeTypeReference = customAttribute.AttributeType;
             TypeDefinition attributeType = Resolve(customAttributeTypeReference);
-            bool isSectionAttribute = attributeType != null 
+            bool isSectionAttribute = attributeType != null
                 && attributeType.Interfaces.Any(i => i.FullName == "Archichect.ISectionAttribute");
             if (isSectionAttribute) {
                 string[] keys = attributeType.Properties.Select(property => property.Name).ToArray();
@@ -386,21 +385,23 @@ namespace Archichect.Reading.AssemblyReading {
 
         [CanBeNull]
         protected TypeDefinition Resolve(TypeReference typeReference) {
-            if (_unresolvableTypeReferences.Contains(typeReference.FullName)) {
+            string assemblyFullName = typeReference.Module.Assembly.Name.FullName;
+            if (_readingContext.UnresolvableAssemblies.Contains(assemblyFullName)) {
                 return null;
             } else {
-                TypeDefinition typeDefinition;
                 try {
-                    typeDefinition = typeReference.Resolve();
-                } catch (Exception ex) {
-                    _unresolvableTypeReferences.Add(typeReference.FullName);
-                    typeDefinition = null;
-                    string msg = "Cannot resolve " + typeReference + " - reason: " + ex.Message;
-                    if (_loggedInfos.Add(msg)) {
-                        Log.WriteInfo(msg);
+                    return typeReference.Resolve();
+                } catch (AssemblyResolutionException ex) {
+                    _readingContext.ExceptionCount++;
+                    if (_readingContext.UnresolvableAssemblies.Add(assemblyFullName)) {
+                        Log.WriteInfo("Cannot resolve " + typeReference + " - reason: " + ex.Message);
                     }
+                    return null;
+                } catch (Exception ex) {
+                    _readingContext.ExceptionCount++;
+                    Log.WriteWarning("Cannot resolve " + typeReference + " - reason: " + ex.Message);
+                    return null;
                 }
-                return typeDefinition;
             }
         }
 

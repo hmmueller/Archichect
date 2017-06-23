@@ -1,6 +1,6 @@
 namespace Archichect {
     public static class Log {
-        public enum Level { Standard, Verbose, Chatty }
+        public enum Level { Standard, Verbose, Chatty, Debug }
 
         public static ILogger Logger {
             get; set;
@@ -11,6 +11,8 @@ namespace Archichect {
         public static void SetLevel(Level level) {
             _level = level;
         }
+
+        public static bool IsDebugEnabled => _level >= Level.Chatty;
 
         public static bool IsChattyEnabled => _level >= Level.Chatty;
 

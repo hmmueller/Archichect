@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -222,7 +223,10 @@ namespace Archichect {
                 }
             }
 
-            IDependencyReader[] readers = fileNames.Select(fileName => readerFactory.CreateReader(fileName, needsOnlyItemTails: false/*???*/)).ToArray();
+            IReadingContext readingContext = readerFactory.CreateReadingContext();
+            IDependencyReader[] readers = fileNames
+                .Select(fileName => readerFactory.CreateReader(fileName, needsOnlyItemTails: false/*???*/, readingContext: readingContext))
+                .ToArray();
 
             foreach (var r in readers) {
                 r.SetReadersInSameReadFilesBeforeReadDependencies(readers);
@@ -230,13 +234,22 @@ namespace Archichect {
 
             // Currently, we add the previous set of dependencies to the newly read ones; with the introduction of a useful "working set" concept, this should vanish ...
             var readSet = new List<Dependency>();
+            var timer = new Stopwatch();
+            timer.Start();
             foreach (var r in readers) {
+                var localTimer = new Stopwatch();
+                localTimer.Start();
                 Dependency[] dependencies = r.ReadDependencies(CurrentGraph, 0, IgnoreCase).ToArray();
                 if (!dependencies.Any()) {
                     Log.WriteWarning("No dependencies found in " + r.FullFileName);
                 }
-
+                if (Log.IsChattyEnabled) {
+                    Log.WriteDebug($"{r.FullFileName}: {dependencies.Length} dependencies read in {localTimer.ElapsedMilliseconds} ms; average={dependencies.Length/ localTimer.Elapsed.TotalSeconds:F2} deps/s");
+                }
                 readSet.AddRange(dependencies);
+            }
+            if (Log.IsChattyEnabled) {
+                Log.WriteDebug($"{readSet.Count} dependencies read in {timer.ElapsedMilliseconds} ms; average={readSet.Count/timer.Elapsed.TotalSeconds:F2} deps/s");
             }
             if (maxNumberOfNewImplicitGraphs > 0 && _autoGraphsForRead > 0) {
                 CreateWorkingGraph(readerFactory.GetType().Name, GraphCreationType.AutoRead, readSet);
@@ -245,6 +258,7 @@ namespace Archichect {
             } else {
                 CurrentGraph.AddDependencies(readSet);
             }
+            readingContext?.AfterReading();
 
             LogDependencyCount();
         }

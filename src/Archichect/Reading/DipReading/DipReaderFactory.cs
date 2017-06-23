@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Archichect.Reading.DipReading {
     public class DipReaderFactory : AbstractReaderFactory {
-        public override IDependencyReader CreateReader(string fileName, bool needsOnlyItemTails) {
+        public override IDependencyReader CreateReader(string fileName, bool needsOnlyItemTails, IReadingContext readingContext) {
             return new DipReader(fileName);
         }
 
@@ -23,6 +23,10 @@ ___EXPLANATION MISSING___";
 
             }
             return result;
+        }
+
+        public override IReadingContext CreateReadingContext() {
+            return null;
         }
     }
 }

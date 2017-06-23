@@ -247,6 +247,8 @@ Examples:
         public override int Transform([NotNull] GlobalContext globalContext, [NotNull] ConfigureOptions configureOptions,
                 [NotNull] TransformOptions transformOptions, [NotNull] [ItemNotNull] IEnumerable<Dependency> dependencies,
                 [NotNull] List<Dependency> transformedDependencies) {
+            var leftSideCache = new Dictionary<Item, Item>();
+            var rightSideCache = new Dictionary<Item, Item>();
 
             if (transformOptions.BackProjectionDependencies != null) {
                 Dictionary<FromTo, Dependency> dependenciesForBackProjection = dependencies.ToDictionary(
@@ -258,9 +260,10 @@ Examples:
                 //int notBackProjected = 0;
                 var localCollector = new Dictionary<FromTo, Dependency>();
                 var mapItems = new Dictionary<Item, Item>();
+                int dependencyProjectCountForLogging = 0;
                 foreach (var d in transformOptions.BackProjectionDependencies) {
-                    FromTo f = ProjectDependency(globalContext.CurrentGraph, d, localCollector,
-                                                 onMissingPattern: () => OnMissingPattern(ref missingPatternCount));
+                    FromTo f = ProjectDependency(globalContext.CurrentGraph, d, leftSideCache, rightSideCache, localCollector,
+                                                 ++dependencyProjectCountForLogging, onMissingPattern: () => OnMissingPattern(ref missingPatternCount));
 
                     if (f != null) {
                         Dependency projected;
@@ -288,8 +291,10 @@ Examples:
                 // Forward projection
                 var localCollector = new Dictionary<FromTo, Dependency>();
                 int missingPatternCount = 0;
+                int dependencyProjectCountForLogging = 0;
                 foreach (var d in dependencies) {
-                    ProjectDependency(globalContext.CurrentGraph, d, localCollector, () => OnMissingPattern(ref missingPatternCount));
+                    ProjectDependency(globalContext.CurrentGraph, d, leftSideCache, rightSideCache, 
+                        localCollector, ++dependencyProjectCountForLogging, () => OnMissingPattern(ref missingPatternCount));
                 }
                 transformedDependencies.AddRange(localCollector.Values);
             }
@@ -308,13 +313,18 @@ Examples:
         }
 
         public interface IProjector {
-            Item Project(WorkingGraph cachingGraph, Item item, bool left);
+            Item Project(WorkingGraph cachingGraph, Item item, bool left, int dependencyProjectCountForLogging);
+            int ProjectCount { get; }
+            int MatchCount { get; }
         }
 
-        private FromTo ProjectDependency(WorkingGraph currentWorkingGraph, Dependency d, Dictionary<FromTo, Dependency> localCollector,
-                                         Func<bool> onMissingPattern) {
-            Item usingItem = _projector.Project(cachingGraph: currentWorkingGraph, item: d.UsingItem, left: true);
-            Item usedItem = _projector.Project(cachingGraph: currentWorkingGraph, item: d.UsedItem, left: false);
+        private FromTo ProjectDependency(WorkingGraph currentWorkingGraph, Dependency d,
+            Dictionary<Item, Item> leftSideCache, Dictionary<Item, Item> rightSideCache, 
+            Dictionary<FromTo, Dependency> localCollector, int dependencyProjectCountForLogging, Func<bool> onMissingPattern) {
+            Item usingItem = ProjectItem(currentWorkingGraph, leftSideCache, d.UsingItem, left: true,
+                dependencyProjectCountForLogging: dependencyProjectCountForLogging);
+            Item usedItem = ProjectItem(currentWorkingGraph, rightSideCache, d.UsedItem, left: false,
+                dependencyProjectCountForLogging: dependencyProjectCountForLogging);
 
             if (usingItem == null) {
                 if (onMissingPattern()) {
@@ -332,6 +342,16 @@ Examples:
             } else {
                 return new FromTo(usingItem, usedItem).AggregateDependency(currentWorkingGraph, d, localCollector);
             }
+        }
+
+        private Item ProjectItem(WorkingGraph currentWorkingGraph, Dictionary<Item, Item> cache, Item item, bool left, 
+            int dependencyProjectCountForLogging) {
+            Item result;
+            if (!cache.TryGetValue(item, out result)) {
+                result = _projector.Project(cachingGraph: currentWorkingGraph, item: item, left: left, dependencyProjectCountForLogging: dependencyProjectCountForLogging);
+                cache.Add(item, result);
+            }
+            return result;
         }
 
         public override IEnumerable<Dependency> CreateSomeTestDependencies(WorkingGraph transformingGraph) {
@@ -356,9 +376,9 @@ Examples:
                 List<Projection> asList = _allProjectionsForMatchCountLoggingOnly.ToList();
                 asList.Sort((p, q) => p.MatchCount - q.MatchCount);
 
-                Log.WriteInfo("Match counts - projection definitions:");
+                Log.WriteInfo("Nr of matches for each projection definition:");
                 foreach (var p in asList) {
-                    Log.WriteInfo($"{p.MatchCount,5} - {p.Source}");
+                    Log.WriteInfo($"{p.MatchCount,5} for {p.ItemMatch.Representation} at {p.Source}");
                 }
             }
         }

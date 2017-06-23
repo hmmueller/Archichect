@@ -5,6 +5,17 @@ using Mono.Cecil;
 
 namespace Archichect.Reading.AssemblyReading {
     public class DotNetAssemblyDependencyReaderFactory : AbstractReaderFactory {
+        public class ReadingContext : IReadingContext {
+            public int ExceptionCount;
+            public readonly HashSet<string> UnresolvableAssemblies = new HashSet<string>();
+
+            public void AfterReading() {
+                if (Log.IsDebugEnabled) {
+                    Log.WriteDebug($"{ExceptionCount} exceptions were thrown during reading");
+                }
+            }
+        }
+
         public static readonly ItemType DOTNETASSEMBLY = ItemType.New(
             "DOTNETASSEMBLY",
             new[] { "Assembly", "Assembly", "Assembly" },
@@ -47,10 +58,10 @@ namespace Archichect.Reading.AssemblyReading {
             ItemType.ForceLoadingPredefinedType(DOTNETTYPE);
         }
 
-        public override IDependencyReader CreateReader(string fileName, bool needsOnlyItemTails) {
+        public override IDependencyReader CreateReader(string fileName, bool needsOnlyItemTails, IReadingContext readingContext) {
             return needsOnlyItemTails
-                ? (AbstractDependencyReader)new ItemsOnlyDotNetAssemblyDependencyReader(this, fileName)
-                : new FullDotNetAssemblyDependencyReader(this, fileName);
+                ? (AbstractDependencyReader)new ItemsOnlyDotNetAssemblyDependencyReader(this, fileName, (ReadingContext)readingContext)
+                : new FullDotNetAssemblyDependencyReader(this, fileName, (ReadingContext)readingContext);
         }
 
         [NotNull]
@@ -150,5 +161,9 @@ _usestype             all -> TYPE
         }
 
         public override IEnumerable<string> SupportedFileExtensions => _supportedFileExtensions;
+
+        public override IReadingContext CreateReadingContext() {
+            return new ReadingContext();
+        }
     }
 }

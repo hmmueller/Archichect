@@ -7,9 +7,11 @@ namespace Archichect.Reading {
         public abstract IEnumerable<string> SupportedFileExtensions { get; }
 
         [NotNull]
-        public abstract IDependencyReader CreateReader([NotNull] string fileName, bool needsOnlyItemTails);
+        public abstract IDependencyReader CreateReader([NotNull] string fileName, bool needsOnlyItemTails, IReadingContext readingContext);
 
         [NotNull]
         public abstract string GetHelp(bool detailedHelp, string filter);
+
+        public abstract IReadingContext CreateReadingContext();
     }
 }

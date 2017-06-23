@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -26,8 +25,10 @@ namespace Archichect.Tests {
                         NKK:?::KEYb       => ;7;0;0;src.abc|13           => NKK:?:keyA2:?");
                 }
 
+                var dipReaderFactory = new DipReaderFactory();
                 IEnumerable<Dependency> dependencies =
-                    new DipReaderFactory().CreateReader(f.FileName, false).ReadDependencies(gc.CurrentGraph, 0, ignoreCase: false);
+                    dipReaderFactory.CreateReader(f.FileName, false, dipReaderFactory.CreateReadingContext())
+                                    .ReadDependencies(gc.CurrentGraph, 0, ignoreCase: false);
                 Assert.IsNotNull(dependencies);
                 Item[] items = dependencies.SelectMany(d => new[] { d.UsingItem, d.UsedItem }).Distinct().ToArray();
                 Assert.AreEqual(3, items.Length);

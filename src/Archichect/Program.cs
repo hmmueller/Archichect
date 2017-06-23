@@ -336,6 +336,7 @@ namespace Archichect {
                     } else if (DebugOption.IsMatch(arg)) {
                         globalContext.StopAbortWatchDog();
                         globalContext.AbortTime = TimeSpan.FromMilliseconds(int.MaxValue); // max. value allowed for CancellationTokenSource.CancelAfter()
+                        Log.SetLevel(Log.Level.Debug);
                         Debugger.Launch();
                     } else if (ReplicateGraphOption.IsMatch(arg)) {
                         // -gc [name] [name...]    

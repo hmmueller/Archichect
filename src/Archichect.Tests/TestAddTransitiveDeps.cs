@@ -22,7 +22,8 @@ namespace Archichect.Tests {
             }));
 
             var gc = new GlobalContext();
-            IEnumerable<Dependency> result = new DipReaderFactory().CreateReader(outFile, false).ReadDependencies(gc.CurrentGraph, 0, ignoreCase: false);
+            IEnumerable<Dependency> result = new DipReaderFactory().CreateReader(outFile, false, null)
+                                                                   .ReadDependencies(gc.CurrentGraph, 0, ignoreCase: false);
             Assert.IsNotNull(result);
 
             IEnumerable<Dependency> s2t = result.Where(d => d.UsingItem.Name.StartsWith("S") && d.UsedItem.Name.StartsWith("T"));
@@ -44,7 +45,8 @@ namespace Archichect.Tests {
             }));
 
             var gc = new GlobalContext();
-            IEnumerable<Dependency> result = new DipReaderFactory().CreateReader(outFile, false).ReadDependencies(gc.CurrentGraph, 0, ignoreCase: false);
+            IEnumerable<Dependency> result = new DipReaderFactory().CreateReader(outFile, false, null)
+                                                                   .ReadDependencies(gc.CurrentGraph, 0, ignoreCase: false);
             Assert.IsNotNull(result);
 
             IEnumerable<Dependency> s2t = result.Where(d => d.UsingItem.Name.StartsWith("S") && d.UsedItem.Name.StartsWith("T"));
