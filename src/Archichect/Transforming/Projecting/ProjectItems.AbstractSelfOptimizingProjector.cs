@@ -74,7 +74,7 @@ namespace Archichect.Transforming.Projecting {
                     int projectionsPerSecond = (int)(dependencyProjectCountForLogging / _timer.Elapsed.TotalSeconds);
                     if (Log.IsChattyEnabled) {
                         decimal avgMatches = 100m * MatchCount / ProjectCount / 100m;
-                        Log.WriteDebug($"{dependencyProjectCountForLogging} dependency projections in {(int)_timer.Elapsed.TotalMilliseconds} ms, i.e. {projectionsPerSecond} proj/s; {avgMatches:F2} matches/proj");
+                        Log.WriteDebug($"{dependencyProjectCountForLogging} dependency projections in {_timer.Elapsed.TotalSeconds:F2} s, i.e. {projectionsPerSecond} projections/s; needed {avgMatches:F2} match attempts per projection");
                     }
                     Reorganize();
                     _reorganizeInterval += _reorganizeIntervalIncrement;
