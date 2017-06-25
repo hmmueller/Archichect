@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
@@ -115,7 +116,7 @@ Examples:
                             _createProjector = (p, i) => new SimpleProjector(p, name: "default projector");
                             break;
                         case "PT":
-                            _createProjector = (p, i) => new SelfOptimizingPrefixTrieProjector(p, i, 30000, name: "PT projector");
+                            _createProjector = (p, i) => new SelfOptimizingPrefixTrieProjector(p, i, 10000, name: "PT projector");
                             break;
                         case "FL":
                             _createProjector = (p, i) => new SelfOptimizingFirstLetterProjector(p, i, 10000, name: "FL projector");
@@ -258,7 +259,7 @@ Examples:
 
                 int missingPatternCount = 0;
                 //int notBackProjected = 0;
-                var localCollector = new Dictionary<FromTo, Dependency>();
+                var localCollector = new Dictionary<FromTo, Dependency>(dependencies.Count());
                 var mapItems = new Dictionary<Item, Item>();
                 int dependencyProjectCountForLogging = 0;
                 foreach (var d in transformOptions.BackProjectionDependencies) {

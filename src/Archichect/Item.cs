@@ -19,6 +19,7 @@ namespace Archichect {
         public readonly string[] CasedValues;
 
         private readonly int _hash;
+        private readonly int _eqHash;
 
         protected ItemSegment([NotNull] ItemType type, [NotNull] string[] values) {
             if (type == null) {
@@ -34,12 +35,22 @@ namespace Archichect {
             Values = values == enoughValues ? values : enoughValues.ToArray();
             CasedValues = type.IgnoreCase ? enoughValues.Select(v => v.ToUpperInvariant()).ToArray() : Values;
 
-            int h = _type.GetHashCode();
+            unchecked {
+                int h = _type.GetHashCode();
+                int eh = _type.GetHashCode();
 
-            foreach (var t in CasedValues) {
-                h ^= (t ?? "").GetHashCode();
+                foreach (var t in CasedValues) {
+                    if (t == null) {
+                        h *= 11;
+                        eh *= 13;
+                    } else {
+                        h = 157204211 * h + t.GetHashCode();
+                        eh = 292713313 * h + t.GetHashCode();
+                    }
+                }
+                _hash = h;
+                _eqHash = eh;
             }
-            _hash = h;
         }
 
         public ItemType Type => _type;
@@ -50,6 +61,8 @@ namespace Archichect {
                 return false;
             } else if (ReferenceEquals(other, this)) {
                 return true;
+            } else if (other._eqHash != _eqHash) {
+                return false;
             } else if (other._hash != _hash) {
                 return false;
             } else if (!Type.Equals(other.Type)) {
@@ -69,6 +82,10 @@ namespace Archichect {
         [DebuggerStepThrough]
         protected int SegmentHashCode() {
             return _hash;
+        }
+
+        internal int GetEqHashCode() {
+            return _eqHash;
         }
     }
 

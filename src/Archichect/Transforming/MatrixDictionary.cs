@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Text;
 using JetBrains.Annotations;
 
@@ -9,7 +10,7 @@ namespace Archichect.Transforming {
         [NotNull]
         public static MatrixDictionary<Item, int> CreateCounts([NotNull, ItemNotNull] IEnumerable<Dependency> dependencies,
             [NotNull] Func<Dependency, int> getCount, WorkingGraph graph) {
-            var aggregated = new Dictionary<FromTo, Dependency>();
+            var aggregated = new Dictionary<FromTo, Dependency>(dependencies.Count());
             foreach (var d in dependencies) {
                 new FromTo(d.UsingItem, d.UsedItem).AggregateDependency(graph, d, aggregated);
             }
