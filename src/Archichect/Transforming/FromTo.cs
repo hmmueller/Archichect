@@ -13,20 +13,18 @@ namespace Archichect.Transforming {
         public readonly TItem To;
 
         private readonly int _hash;
-        private readonly int _eqHash;
+        
 
         public FromTo([NotNull] TItem from, [NotNull] TItem to) {
             From = from;
             To = to;
 
             _hash = unchecked(17 * From.GetHashCode() + 650069881 * To.GetHashCode());
-            _eqHash = unchecked(38795333 * From.GetEqHashCode() + 23 * To.GetEqHashCode());
         }
 
         public override bool Equals(object obj) {
             var other = obj as FromTo;
             return other != null
-                && other._eqHash == _eqHash
                 && other._hash == _hash
                 && other.From.Equals(From) 
                 && other.To.Equals(To);
