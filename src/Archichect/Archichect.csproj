@@ -95,6 +95,9 @@
     <Compile Include="..\CommonAssemblyInfo.cs">
       <Link>CommonAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Immutables\Immutable.cs" />
+    <Compile Include="Immutables\ImmutableSupport.cs" />
+    <Compile Include="Immutables\Mutable.cs" />
     <Compile Include="PathMatching\AbstractRegexDepthFirstPathTraverser.cs" />
     <Compile Include="AbstractLogger.cs" />
     <Compile Include="AbstractDepthFirstPathTraverser.cs" />

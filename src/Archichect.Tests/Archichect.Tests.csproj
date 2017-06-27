@@ -80,6 +80,7 @@
     <Compile Include="TestAddTransitiveDeps.cs" />
     <Compile Include="TestCheckDeps.cs" />
     <Compile Include="TestFlatPathWriterWithRegexMarker.cs" />
+    <Compile Include="TestImmutableMutable.cs" />
     <Compile Include="TestPathRegexTraverser.cs" />
     <Compile Include="TestPathRegex.cs" />
     <Compile Include="TestMarkCycleDeps.cs" />
